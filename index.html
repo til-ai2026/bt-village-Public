@@ -65,7 +65,7 @@ button.ghost{background:transparent;color:var(--sub);border:2px solid var(--line
     <div class="target" id="pl-e"></div>
     <div class="word" id="pl-w"></div>
     <p class="sub" style="text-align:center" id="pl-t">Raise your hand! 손을 높이 들어요</p>
-    <div class="cam"><video id="v" playsinline muted autoplay></video><div class="zone">이 선 위로 손을 올려요</div></div>
+    <div class="cam"><video id="v" playsinline muted autoplay></video><div class="zone">어깨보다 높이 손을 올려요 🙋</div></div>
     <div class="meter"><i id="m"></i></div>
     <p class="sub" id="camstat"></p>
   </div>
@@ -96,7 +96,7 @@ function hub(){
 }
 function startCam(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$("camstat").textContent="카메라를 쓸 수 없어요. 버튼으로 진행해요.";return Promise.resolve(false)}
-  return navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false}).then(function(s){st.stream=s;$("v").srcObject=s;$("camstat").textContent="카메라 인식 중";return true}).catch(function(){$("camstat").textContent="카메라 허용이 안 됐어요. 버튼으로 진행해요.";return false});
+  return navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false}).then(function(s){st.stream=s;$("v").srcObject=s;initPose();return true}).catch(function(){$("camstat").textContent="카메라 허용이 안 됐어요. 버튼으로 진행해요.";return false});
 }
 function mission(){
   var m=M[st.idx%M.length];
@@ -109,7 +109,29 @@ function mission(){
   st.timer=setInterval(detect,100);
 }
 var cv=document.createElement("canvas");cv.width=64;cv.height=48;var cx=cv.getContext("2d",{willReadFrequently:true});
+var pose=null;
+function initPose(){
+  $("camstat").textContent="AI 관절 인식 준비 중… (처음엔 몇 초 걸려요)";
+  import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm").then(function(mp){
+    return mp.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm").then(function(fs){
+      function mk(d){return mp.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},runningMode:"VIDEO",numPoses:1})}
+      return mk("GPU").catch(function(){return mk("CPU")});
+    });
+  }).then(function(p){pose=p;$("camstat").textContent="관절 인식 켜짐 ✅"}).catch(function(){$("camstat").textContent="간단 움직임 감지 모드 (관절 인식을 불러오지 못했어요)"});
+}
 function detect(){
+  var v=$("v");if(st.done||!st.stream||v.readyState<2)return;
+  if(!pose){detectMotion();return}
+  var lm;try{var r=pose.detectForVideo(v,performance.now());lm=r.landmarks&&r.landmarks[0]}catch(e){return}
+  if(!lm){st.hits=0;$("m").style.width="0";$("camstat").textContent="몸이 안 보여요. 뒤로 물러나 주세요";return}
+  $("camstat").textContent="관절 인식 켜짐 ✅";
+  function up(w,s){return lm[w].visibility>0.5&&lm[s].visibility>0.5&&lm[w].y<lm[s].y-0.05}
+  var raised=up(15,11)||up(16,12);
+  st.hits=raised?st.hits+1:0;
+  $("m").style.width=Math.min(100,st.hits*100/4)+"%";
+  if(st.hits>=4)clear(false);
+}
+function detectMotion(){
   var v=$("v");if(st.done||!st.stream||v.readyState<2)return;
   cx.drawImage(v,0,0,64,48);
   var d=cx.getImageData(0,0,64,24).data,g=new Uint8Array(64*24);
