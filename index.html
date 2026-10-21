@@ -34,7 +34,9 @@ button.ghost{background:transparent;color:var(--sub);border:2px solid var(--line
 .word{text-align:center;font-size:28px;font-weight:800}
 .cam{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:14px;overflow:hidden;margin-top:10px}
 .cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.cam .zone{position:absolute;left:0;right:0;top:0;height:50%;border-bottom:2px dashed rgba(255,255,255,.8);color:#fff;font-size:12px;padding:4px 8px}
+.cam canvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+.cam .zone{position:absolute;left:0;right:0;top:0;color:#fff;font-size:12px;padding:4px 8px;background:rgba(0,0,0,.35)}
+#camstat{font-weight:700}
 .meter{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px}
 .meter i{display:block;height:100%;background:var(--main);width:0}
 .hide{display:none}
@@ -43,7 +45,7 @@ button.ghost{background:transparent;color:var(--sub);border:2px solid var(--line
 </head>
 <body>
 <h1>🏘️ BT Village</h1>
-<p class="sub">MVP 프로토타입 · 움직임 점검 단계</p>
+<p class="sub">MVP 프로토타입 · 움직임 점검 단계 · v2 관절 인식</p>
 
 <section id="s-start">
   <div class="card teacher"><div class="av">🐻</div><div class="say">안녕! 나는 Brown Teacher야. 카메라 앞에서 손을 들어 미션을 해볼까요? 카메라 영상은 저장되거나 전송되지 않아요.</div></div>
@@ -65,7 +67,7 @@ button.ghost{background:transparent;color:var(--sub);border:2px solid var(--line
     <div class="target" id="pl-e"></div>
     <div class="word" id="pl-w"></div>
     <p class="sub" style="text-align:center" id="pl-t">Raise your hand! 손을 높이 들어요</p>
-    <div class="cam"><video id="v" playsinline muted autoplay></video><div class="zone">어깨보다 높이 손을 올려요 🙋</div></div>
+    <div class="cam" id="cam"><video id="v" playsinline muted autoplay></video><canvas id="ov"></canvas><div class="zone">어깨보다 높이 손을 올려요 🙋 (파랑=어깨, 빨강=손목)</div></div>
     <div class="meter"><i id="m"></i></div>
     <p class="sub" id="camstat"></p>
   </div>
@@ -110,22 +112,23 @@ function mission(){
 }
 var cv=document.createElement("canvas");cv.width=64;cv.height=48;var cx=cv.getContext("2d",{willReadFrequently:true});
 var pose=null;
+function draw(lm){var c=$("ov"),v=$("v");if(c.width!==v.videoWidth){c.width=v.videoWidth;c.height=v.videoHeight;$("cam").style.aspectRatio=v.videoWidth+"/"+v.videoHeight}var g=c.getContext("2d");g.clearRect(0,0,c.width,c.height);[[11,"#00c2ff"],[12,"#00c2ff"],[15,"#ff3b6b"],[16,"#ff3b6b"]].forEach(function(p){var l=lm[p[0]];if(l.visibility<0.5)return;g.beginPath();g.arc(l.x*c.width,l.y*c.height,10,0,6.28);g.fillStyle=p[1];g.fill()})}
 function initPose(){
   $("camstat").textContent="AI 관절 인식 준비 중… (처음엔 몇 초 걸려요)";
-  import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm").then(function(mp){
+  import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs").then(function(mp){
     return mp.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm").then(function(fs){
       function mk(d){return mp.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},runningMode:"VIDEO",numPoses:1})}
       return mk("GPU").catch(function(){return mk("CPU")});
     });
-  }).then(function(p){pose=p;$("camstat").textContent="관절 인식 켜짐 ✅"}).catch(function(){$("camstat").textContent="간단 움직임 감지 모드 (관절 인식을 불러오지 못했어요)"});
+  }).then(function(p){pose=p;$("camstat").textContent="관절 인식 켜짐 ✅"}).catch(function(e){pose=null;$("camstat").textContent="관절 인식 실패 → 아래 버튼으로 진행해 주세요 ("+(e&&e.message?e.message:e)+")"});
 }
 function detect(){
   var v=$("v");if(st.done||!st.stream||v.readyState<2)return;
-  if(!pose){detectMotion();return}
+  if(!pose){return}
   var lm;try{var r=pose.detectForVideo(v,performance.now());lm=r.landmarks&&r.landmarks[0]}catch(e){return}
-  if(!lm){st.hits=0;$("m").style.width="0";$("camstat").textContent="몸이 안 보여요. 뒤로 물러나 주세요";return}
+  if(!lm){$("ov").getContext("2d").clearRect(0,0,9999,9999);st.hits=0;$("m").style.width="0";$("camstat").textContent="몸이 안 보여요. 뒤로 물러나 주세요";return}
   $("camstat").textContent="관절 인식 켜짐 ✅";
-  function up(w,s){return lm[w].visibility>0.5&&lm[s].visibility>0.5&&lm[w].y<lm[s].y-0.05}
+  draw(lm);function up(w,s){return lm[w].visibility>0.5&&lm[s].visibility>0.5&&lm[w].y<lm[s].y-0.05}
   var raised=up(15,11)||up(16,12);
   st.hits=raised?st.hits+1:0;
   $("m").style.width=Math.min(100,st.hits*100/4)+"%";
