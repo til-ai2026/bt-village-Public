@@ -541,7 +541,9 @@ async function goDemo() {
   $('demoKid').textContent = '🙇';
   $('demoText').textContent = 'Now, hands down.';
   $('demoKo').textContent = '이제 손을 내려요. 손을 내려야 다음 풍선을 받을 수 있어요.';
-  say('Now, hands down.');
+  // 손을 이미 내렸어도 안내가 끝까지 나온 뒤 다음으로 넘어감
+  await say('Now, hands down.');
+  if (g !== gen) return;
   await waitDown();
   if (g !== gen) return;
 
