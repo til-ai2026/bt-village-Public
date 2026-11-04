@@ -2,6 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>
+  /* ===== 말하기 판정 단계 (여기 숫자만 바꾸세요) =====
+     1: 말소리만 들리면 통과
+     2: 비슷한 소리까지 통과 (예: red = read/wed)
+     3: 정확한 단어만 통과                                  */
+  const JUDGE_LEVEL = 2;
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>My Color Balloons</title>
@@ -174,6 +181,8 @@
   #speak .big-btn { font-size: clamp(30px, 4.5vw, 48px); padding: 14px 50px; margin-top: 18px; }
   #heard { position: absolute; top: 10px; left: 12px; z-index: 45; font-size: 14px; background: rgba(0,0,0,.45); color: #fff; padding: 4px 10px; border-radius: 10px; max-width: 40vw; display: none; }
   #heard.on { display: block; }
+  #stats { position: absolute; top: 10px; right: 12px; z-index: 45; font-size: 14px; background: rgba(0,0,0,.45); color: #fff; padding: 4px 10px; border-radius: 10px; display: none; }
+  #stats.on { display: block; }
 
   /* 완료 */
   #bundle { position: relative; width: 320px; height: 300px; margin-bottom: 10px; }
@@ -246,6 +255,7 @@
   <div id="pop"></div>
   <div id="caption"></div>
   <div id="heard"></div>
+  <div id="stats"></div>
 
   <div id="cam">
     <video id="video" playsinline muted autoplay></video>
@@ -723,20 +733,37 @@ const ACCEPT = {
   two:    ['two', 'to', 'too', '2', 'tu', 'do', 'true', 'chu', 'tooth', 'tool'],
   three:  ['three', 'tree', 'free', '3', 'trees', 'tri', 'sree', 'thee', 'fee', 'three3', 'see'],
 };
+// 정확한 단어 (숫자는 아라비아 숫자도 정확으로 봄)
+const EXACT = { red: ['red'], yellow: ['yellow'], blue: ['blue'], one: ['one', '1'], two: ['two', '2'], three: ['three', '3'] };
 const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-function isMatch(key, transcripts) {
-  const ok = ACCEPT[key];
+function hasWord(list, transcripts) {
   return transcripts.some(t => {
     const n = norm(t);
     if (!n) return false;
     const words = n.split(' ');
     const glued = n.replace(/ /g, '');
-    return ok.some(a => a.includes(' ') ? n.includes(a) : (words.includes(a) || glued === a.replace(/ /g, '')));
+    return list.some(a => a.includes(' ') ? n.includes(a) : (words.includes(a) || glued === a.replace(/ /g, '')));
   });
 }
-function showHeard(list) {
+// 들은 후보들 → 'exact' | 'similar' | 'other'(다른 말) | 'silent'(말소리 없음)
+function classify(key, transcripts) {
+  if (hasWord(EXACT[key], transcripts)) return 'exact';
+  if (hasWord(ACCEPT[key], transcripts)) return 'similar';
+  return transcripts.some(t => norm(t)) ? 'other' : 'silent';
+}
+const RANK = { silent: 0, other: 1, similar: 2, exact: 3 };
+// 판정 단계에 따른 통과 여부
+function passes(kind) {
+  if (JUDGE_LEVEL <= 1) return kind !== 'silent';
+  if (JUDGE_LEVEL === 2) return kind === 'exact' || kind === 'similar';
+  return kind === 'exact';
+}
+// 기록용 3분류: exact / similar / none (말소리 없음·다른 말·오류)
+const record = kind => (kind === 'exact' || kind === 'similar') ? kind : 'none';
+let speakStats = { exact: 0, similar: 0, none: 0 };
+function showHeard(list, kind) {
   const h = $('heard');
-  h.textContent = '🎧 ' + (list.length ? list.join(' / ') : '(no sound)');
+  h.textContent = '🎧 ' + (list.length ? list.join(' / ') : '(no sound)') + (kind ? `  [${kind}]` : '');
   h.classList.add('on');
 }
 // TTS가 완전히 끝날 때까지 대기 (마이크와 겹치지 않게)
@@ -745,10 +772,11 @@ async function ttsIdle() {
   while ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending) && performance.now() - t0 < 4000) await sleep(80);
   await sleep(300);
 }
-// 한 번 듣기 → 'ok' | 'test' | 'fail'
+// 한 번 듣기 → 들은 것 중 가장 좋은 결과: 'exact' | 'similar' | 'other' | 'silent'
+// (오류·시간 초과로 아무것도 못 들으면 'silent')
 function listenOnce(key, ms = 5000) {
   return new Promise(resolve => {
-    let done = false, rec = null, timer = 0;
+    let done = false, rec = null, timer = 0, best = 'silent';
     const t0 = performance.now();
     const finish = r => {
       if (done) return; done = true;
@@ -768,8 +796,11 @@ function listenOnce(key, ms = 5000) {
         const alts = [];
         for (let i = 0; i < e.results.length; i++)
           for (let j = 0; j < e.results[i].length; j++) alts.push(e.results[i][j].transcript.trim());
-        showHeard(alts);
-        if (isMatch(key, alts)) finish('ok');
+        const kind = classify(key, alts);
+        if (RANK[kind] > RANK[best]) best = kind;
+        showHeard(alts, best);
+        // 정확하면 바로 끝, 아니면 판정 단계를 통과할 때 끝 (그 외엔 시간까지 계속 들음)
+        if (best === 'exact' || (passes(best) && e.results[e.results.length - 1].isFinal)) finish(best);
       };
       rec.onerror = e => {
         console.warn('speech error', e.error);
@@ -784,8 +815,8 @@ function listenOnce(key, ms = 5000) {
       try { rec.start(); } catch (e) { console.warn(e); }
     };
     $('mic').classList.add('on');
-    onTestPass = () => { showHeard(['(test pass)']); finish('test'); };
-    timer = setTimeout(() => finish('fail'), ms);
+    onTestPass = () => { best = 'exact'; showHeard(['(test pass)'], best); finish(best); };
+    timer = setTimeout(() => finish(best), ms);
     start();
   });
 }
@@ -798,6 +829,7 @@ async function goSpeak() {
     { key: myColor, word: c.name, card: `${balloonSVG(myColor)}<div>${c.name}</div>` },
     ...[1, 2, 3].map(n => ({ key: NUM[n].toLowerCase(), word: NUM[n], card: `<div class="n" style="color:${c.fill}">${n}</div><div>${NUM[n]}</div>` })),
   ];
+  speakStats = { exact: 0, similar: 0, none: 0 };
   $('speakDots').innerHTML = items.map(() => '<span></span>').join('');
   $('speakCard').innerHTML = balloonSVG(myColor);
   $('speakCard').className = 'card';
@@ -830,28 +862,30 @@ async function goSpeak() {
     const card = $('speakCard');
     card.className = 'card';
     card.innerHTML = it.card;
-    let passed = false;
+    let passed = false, best = 'silent', last = null;
     for (let attempt = 1; attempt <= 2 && !passed; attempt++) {
-      $('bubble').textContent = `${it.word}!`;
+      // 두 번째: 말소리가 없었으면 크게 말하라고, 다른 말이었으면 한 번 더
+      const line = attempt === 1 ? `${it.word}!`
+        : last === 'silent' ? `I can't hear you. Say it louder! ${it.word}!`
+        : `One more time. ${it.word}!`;
+      $('bubble').textContent = attempt === 1 || last !== 'silent' ? `${it.word}!` : 'Say it louder!';
       document.querySelector('.buddy').classList.add('talk');
-      await say(attempt === 1 ? `${it.word}!` : `One more time. ${it.word}!`, { rate: 0.8 });
+      await say(line, { rate: 0.8 });
       document.querySelector('.buddy').classList.remove('talk');
       if (g !== gen) return;
       await ttsIdle();                       // TTS 끝난 뒤에만 마이크 ON
       $('bubble').textContent = 'Your turn!';
-      const r = await listenOnce(it.key);
+      last = await listenOnce(it.key);
       if (g !== gen) return;
-      if (r !== 'fail') {
-        passed = true;
-        card.classList.add('ok');
-        $('bubble').textContent = 'Good job!';
-        await say(['Good job!', 'Great!', 'Wonderful!', 'Super!'][i % 4]);
-      }
+      if (RANK[last] > RANK[best]) best = last;
+      passed = passes(last);
     }
-    if (!passed) {
-      $('bubble').textContent = 'Great try!';
-      await say('Great try!');
-    }
+    // 아이 화면 반응은 결과와 상관없이 항상 칭찬
+    speakStats[record(best)]++;
+    card.classList.add('ok');
+    const praise = passed ? ['Good job!', 'Great!', 'Wonderful!', 'Super!'][i % 4] : 'Great try!';
+    $('bubble').textContent = praise;
+    await say(praise);
     dots[i].className = 'done';
     await sleep(400);
   }
@@ -868,6 +902,10 @@ async function goComplete() {
     `<div style="position:absolute;left:${x}px;top:${y}px">${balloonSVG(myColor).replace('<svg', `<svg style="animation-delay:${i * .3}s;opacity:.25"`)}</div>`).join('');
   $('completeText').innerHTML = `<b style="background:${c.fill}">${NUM[GOAL]} ${c.name}</b> balloons!`;
   show('complete');
+  $('heard').classList.remove('on');
+  // 테스트용 말하기 결과 (구석에 작게)
+  $('stats').textContent = `정확 ${speakStats.exact} / 비슷 ${speakStats.similar} / 확인불가 ${speakStats.none} · 판정 ${JUDGE_LEVEL}단계`;
+  $('stats').classList.add('on');
   confetti();
   await say(`You did it! You got ${NUM[GOAL].toLowerCase()} ${c.name.toLowerCase()} balloons!`);
   // 하나씩 세기
@@ -898,6 +936,7 @@ $('againBtn').addEventListener('click', () => {
   for (const b of [...balloons]) removeBalloon(b);
   onRaise = null; downWaiters = []; onTestPass = null;
   $('heard').classList.remove('on');
+  $('stats').classList.remove('on');
   goSelect();
 });
 </script>
