@@ -145,6 +145,36 @@
   #testBtn.held { background: rgba(61,220,132,.85); transform: scale(.95); }
   #holdRing { position: absolute; inset: -10px; pointer-events: none; }
 
+  /* 말하기 */
+  .speak-row { display: flex; align-items: center; gap: clamp(24px, 6vw, 80px); }
+  .buddy { font-size: clamp(110px, 16vw, 180px); line-height: 1; position: relative; }
+  .buddy.talk { animation: wave .5s ease-in-out infinite; }
+  .bubble {
+    position: absolute; left: 60%; top: -34px; white-space: nowrap;
+    background: #fff; border-radius: 24px; padding: 8px 20px;
+    font-size: clamp(24px, 3vw, 34px); box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  }
+  .card {
+    width: clamp(200px, 26vw, 280px); height: clamp(220px, 30vw, 310px);
+    background: #fff; border-radius: 36px; box-shadow: 0 10px 0 rgba(0,0,0,.08);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: clamp(40px, 6vw, 64px); padding: 12px;
+  }
+  .card svg { width: 46%; }
+  .card .n { font-size: 2.1em; line-height: 1; }
+  .card.ok { animation: popIn .5s cubic-bezier(.3,1.8,.5,1); box-shadow: 0 0 0 10px #3ddc84; }
+  .speak-dots { display: flex; gap: 14px; margin-top: 22px; }
+  .speak-dots span { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.7); }
+  .speak-dots span.cur { background: #ff7a45; }
+  .speak-dots span.done { background: #3ddc84; }
+  .mic { position: relative; font-size: 54px; margin-top: 16px; width: 90px; height: 90px; line-height: 90px; border-radius: 50%; background: #fff; visibility: hidden; }
+  .mic.on { visibility: visible; }
+  .mic .ring { position: absolute; inset: 0; border-radius: 50%; border: 5px solid #ff4757; animation: ring 1.2s ease-out infinite; }
+  @keyframes ring { from { transform: scale(1); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+  #speak .big-btn { font-size: clamp(30px, 4.5vw, 48px); padding: 14px 50px; margin-top: 18px; }
+  #heard { position: absolute; top: 10px; left: 12px; z-index: 45; font-size: 14px; background: rgba(0,0,0,.45); color: #fff; padding: 4px 10px; border-radius: 10px; max-width: 40vw; display: none; }
+  #heard.on { display: block; }
+
   /* 완료 */
   #bundle { position: relative; width: 320px; height: 300px; margin-bottom: 10px; }
   #bundle svg { position: absolute; width: 110px; animation: bob 2.4s ease-in-out infinite; }
@@ -191,7 +221,19 @@
     <div class="ko" id="demoKo"></div>
   </section>
 
-  <!-- 5. 완료 -->
+  <!-- 5. 말하기 -->
+  <section class="screen" id="speak">
+    <div class="speak-row">
+      <div class="buddy">🐰<div class="bubble" id="bubble">Listen!</div></div>
+      <div class="card" id="speakCard"></div>
+    </div>
+    <div class="speak-dots" id="speakDots"></div>
+    <div class="mic" id="mic">🎤<span class="ring"></span></div>
+    <div class="ko" id="speakKo">따라 말해요</div>
+    <button class="big-btn" id="speakStart">🎤 Let's talk!</button>
+  </section>
+
+  <!-- 6. 완료 -->
   <section class="screen" id="complete">
     <div id="bundle"></div>
     <h1>You did it!</h1>
@@ -203,6 +245,7 @@
   <div id="prompt"></div>
   <div id="pop"></div>
   <div id="caption"></div>
+  <div id="heard"></div>
 
   <div id="cam">
     <video id="video" playsinline muted autoplay></video>
@@ -224,8 +267,8 @@ const COLORS = {
   blue:   { name: 'Blue',   ko: '파랑', fill: '#3d9bff', dark: '#1c6fd1' },
 };
 const NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five'];
-const GOAL = 5;              // 모을 내 색 풍선 수
-const OTHER = 5;             // 다른 색 풍선 수
+const GOAL = 3;              // 모을 내 색 풍선 수
+const OTHER = 2;             // 다른 색 풍선 수 (기회 = GOAL + OTHER)
 const HOLD_MS = 300;         // 손 올림 인정 시간
 const DOWN_MS = 250;         // 손 내림 인정 시간
 const FLOAT_MS = 7000;       // 풍선이 화면을 지나가는 시간
@@ -293,6 +336,7 @@ function say(text, { rate = 0.88, caption = true } = {}) {
 const hand = { pose: false, sim: false, upSince: 0, downSince: performance.now(), latched: false };
 let onRaise = null;             // 현재 raise를 기다리는 콜백 (1회성)
 let downWaiters = [];           // 손 내림을 기다리는 콜백들
+let onTestPass = null;          // 말하기 단계: 테스트 버튼/스페이스로 통과
 
 function rawUp() { return hand.pose || hand.sim; }
 function isDown(now = performance.now()) {
@@ -324,7 +368,10 @@ const waitDown = () => new Promise(r => { if (isDown()) r(); else downWaiters.pu
 
 // 테스트 버튼: 터치(꾹 누르기) 또는 스페이스바
 const tb = $('testBtn');
-const simOn = () => { hand.sim = true; tb.classList.add('held'); };
+const simOn = () => {
+  hand.sim = true; tb.classList.add('held');
+  if (onTestPass) { const f = onTestPass; onTestPass = null; f(); }
+};
 const simOff = () => { hand.sim = false; tb.classList.remove('held'); };
 tb.addEventListener('pointerdown', e => { e.preventDefault(); tb.setPointerCapture(e.pointerId); simOn(); });
 ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => tb.addEventListener(ev, simOff));
@@ -433,9 +480,8 @@ function shuffle(a) {
 }
 function makeSequence(my) {
   const others = Object.keys(COLORS).filter(c => c !== my);
-  // 다른 색 5개: 두 색을 섞어서 (최소 2개씩)
-  const nA = 2 + Math.floor(Math.random() * 2); // 2 또는 3
-  const pool = [...Array(GOAL).fill(my), ...Array(nA).fill(others[0]), ...Array(OTHER - nA).fill(others[1])];
+  // 다른 색: 나머지 두 색에서 무작위로 뽑기
+  const pool = [...Array(GOAL).fill(my), ...Array.from({ length: OTHER }, () => others[Math.floor(Math.random() * 2)])];
   let seq;
   do { seq = shuffle(pool.slice()); } while (!noTriple(seq));
   return seq;
@@ -662,21 +708,168 @@ async function goPlay() {
     }
     await sleep(700);
   }
+  if (g === gen) goSpeak();
+}
+
+/* 5. 말하기 (Web Speech API 음성 인식) */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let srBroken = !SR;
+// 아이 발음을 고려한 비슷한 소리 허용 목록
+const ACCEPT = {
+  red:    ['red', 'read', 'wed', 'rad', 'bed', 'led', 'rid', 'redd', 'reds', 'rhett', 'ready'],
+  yellow: ['yellow', 'yello', 'yelo', 'yellows', 'hello', 'jello', 'yeah low', 'yell oh', 'yell', 'mellow', 'fellow'],
+  blue:   ['blue', 'blu', 'blew', 'bloo', 'blues', 'glue', 'flu', 'bru', 'boo'],
+  one:    ['one', 'won', '1', 'wan', 'want', 'when', 'juan', 'on', 'wine', 'once'],
+  two:    ['two', 'to', 'too', '2', 'tu', 'do', 'true', 'chu', 'tooth', 'tool'],
+  three:  ['three', 'tree', 'free', '3', 'trees', 'tri', 'sree', 'thee', 'fee', 'three3', 'see'],
+};
+const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+function isMatch(key, transcripts) {
+  const ok = ACCEPT[key];
+  return transcripts.some(t => {
+    const n = norm(t);
+    if (!n) return false;
+    const words = n.split(' ');
+    const glued = n.replace(/ /g, '');
+    return ok.some(a => a.includes(' ') ? n.includes(a) : (words.includes(a) || glued === a.replace(/ /g, '')));
+  });
+}
+function showHeard(list) {
+  const h = $('heard');
+  h.textContent = '🎧 ' + (list.length ? list.join(' / ') : '(no sound)');
+  h.classList.add('on');
+}
+// TTS가 완전히 끝날 때까지 대기 (마이크와 겹치지 않게)
+async function ttsIdle() {
+  const t0 = performance.now();
+  while ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending) && performance.now() - t0 < 4000) await sleep(80);
+  await sleep(300);
+}
+// 한 번 듣기 → 'ok' | 'test' | 'fail'
+function listenOnce(key, ms = 5000) {
+  return new Promise(resolve => {
+    let done = false, rec = null, timer = 0;
+    const t0 = performance.now();
+    const finish = r => {
+      if (done) return; done = true;
+      clearTimeout(timer); onTestPass = null;
+      $('mic').classList.remove('on');
+      if (rec) { rec.onend = rec.onresult = rec.onerror = null; try { rec.abort(); } catch (e) {} }
+      setTimeout(() => resolve(r), 250); // 마이크가 놓인 뒤 TTS가 나오도록
+    };
+    const start = () => {
+      if (srBroken) return;
+      rec = new SR();
+      rec.lang = 'en-US';
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 5;
+      rec.onresult = e => {
+        const alts = [];
+        for (let i = 0; i < e.results.length; i++)
+          for (let j = 0; j < e.results[i].length; j++) alts.push(e.results[i][j].transcript.trim());
+        showHeard(alts);
+        if (isMatch(key, alts)) finish('ok');
+      };
+      rec.onerror = e => {
+        console.warn('speech error', e.error);
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          srBroken = true; showHeard(['마이크/음성 인식 사용 불가 · 테스트 버튼 사용']);
+        }
+      };
+      rec.onend = () => {
+        // 사파리는 짧게 끊기는 경우가 많아 시간이 남으면 다시 듣기
+        if (!done && !srBroken && performance.now() - t0 < ms - 800) { try { start(); } catch (e) {} }
+      };
+      try { rec.start(); } catch (e) { console.warn(e); }
+    };
+    $('mic').classList.add('on');
+    onTestPass = () => { showHeard(['(test pass)']); finish('test'); };
+    timer = setTimeout(() => finish('fail'), ms);
+    start();
+  });
+}
+
+async function goSpeak() {
+  const g = ++gen;
+  setPrompt('');
+  const c = COLORS[myColor];
+  const items = [
+    { key: myColor, word: c.name, card: `${balloonSVG(myColor)}<div>${c.name}</div>` },
+    ...[1, 2, 3].map(n => ({ key: NUM[n].toLowerCase(), word: NUM[n], card: `<div class="n" style="color:${c.fill}">${n}</div><div>${NUM[n]}</div>` })),
+  ];
+  $('speakDots').innerHTML = items.map(() => '<span></span>').join('');
+  $('speakCard').innerHTML = balloonSVG(myColor);
+  $('speakCard').className = 'card';
+  $('bubble').textContent = "Let's talk!";
+  $('speakKo').textContent = '버튼을 누르고 따라 말해요';
+  $('mic').classList.remove('on');
+  $('speakStart').style.display = '';
+  show('speak');
+  say('Great! Now, listen and say it with me!');
+
+  // 사파리: 첫 마이크 권한은 터치 안에서 받는 것이 안전 (테스트 버튼/스페이스로도 시작)
+  await new Promise(r => {
+    const go = () => { onTestPass = null; $('speakStart').onclick = null; r(); };
+    $('speakStart').onclick = () => {
+      if (SR && !srBroken) { try { const warm = new SR(); warm.onerror = () => {}; warm.start(); setTimeout(() => { try { warm.abort(); } catch (e) {} }, 300); } catch (e) {} }
+      go();
+    };
+    onTestPass = go;
+  });
+  if (g !== gen) return;
+  $('speakStart').style.display = 'none';
+  $('speakKo').textContent = '듣고 따라 말해요';
+  await sleep(500);
+
+  const dots = $('speakDots').children;
+  for (let i = 0; i < items.length; i++) {
+    if (g !== gen) return;
+    const it = items[i];
+    dots[i].className = 'cur';
+    const card = $('speakCard');
+    card.className = 'card';
+    card.innerHTML = it.card;
+    let passed = false;
+    for (let attempt = 1; attempt <= 2 && !passed; attempt++) {
+      $('bubble').textContent = `${it.word}!`;
+      document.querySelector('.buddy').classList.add('talk');
+      await say(attempt === 1 ? `${it.word}!` : `One more time. ${it.word}!`, { rate: 0.8 });
+      document.querySelector('.buddy').classList.remove('talk');
+      if (g !== gen) return;
+      await ttsIdle();                       // TTS 끝난 뒤에만 마이크 ON
+      $('bubble').textContent = 'Your turn!';
+      const r = await listenOnce(it.key);
+      if (g !== gen) return;
+      if (r !== 'fail') {
+        passed = true;
+        card.classList.add('ok');
+        $('bubble').textContent = 'Good job!';
+        await say(['Good job!', 'Great!', 'Wonderful!', 'Super!'][i % 4]);
+      }
+    }
+    if (!passed) {
+      $('bubble').textContent = 'Great try!';
+      await say('Great try!');
+    }
+    dots[i].className = 'done';
+    await sleep(400);
+  }
   if (g === gen) goComplete();
 }
 
-/* 5. 완료 */
+/* 6. 완료 */
 async function goComplete() {
   const g = ++gen;
   setPrompt('');
   const c = COLORS[myColor];
-  const pos = [[105, 0], [20, 40], [190, 40], [60, 95], [150, 95]];
+  const pos = [[105, 0], [35, 55], [175, 55]];
   $('bundle').innerHTML = pos.map(([x, y], i) =>
     `<div style="position:absolute;left:${x}px;top:${y}px">${balloonSVG(myColor).replace('<svg', `<svg style="animation-delay:${i * .3}s;opacity:.25"`)}</div>`).join('');
-  $('completeText').innerHTML = `<b style="background:${c.fill}">Five ${c.name}</b> balloons!`;
+  $('completeText').innerHTML = `<b style="background:${c.fill}">${NUM[GOAL]} ${c.name}</b> balloons!`;
   show('complete');
   confetti();
-  await say(`You did it! You got five ${c.name.toLowerCase()} balloons!`);
+  await say(`You did it! You got ${NUM[GOAL].toLowerCase()} ${c.name.toLowerCase()} balloons!`);
   // 하나씩 세기
   const svgs = $('bundle').querySelectorAll('svg');
   for (let i = 0; i < GOAL; i++) {
@@ -703,7 +896,8 @@ function confetti() {
 }
 $('againBtn').addEventListener('click', () => {
   for (const b of [...balloons]) removeBalloon(b);
-  onRaise = null; downWaiters = [];
+  onRaise = null; downWaiters = []; onTestPass = null;
+  $('heard').classList.remove('on');
   goSelect();
 });
 </script>
