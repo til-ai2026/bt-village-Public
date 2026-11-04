@@ -51,11 +51,34 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
   background:radial-gradient(circle at 50% 120%, #9fdc8c 0 28%, transparent 28.2%), linear-gradient(#bfe6ff,#eaf7ff)}
 #s-start .bt-hero{height:34vmin;aspect-ratio:200/260}
 #s-start .bt-hero svg{width:100%;height:100%}
-.logo{margin:0;font-size:clamp(38px,8.5vmin,90px);color:#23324d;line-height:1}
-.logo-en{font-size:clamp(14px,2.4vmin,24px);color:#5b6b88;margin-top:-1vmin}
+.logo{margin:0;font-size:clamp(38px,8.5vmin,90px);color:#23324d;line-height:1.15}
+.logo-en{font-size:clamp(14px,2.4vmin,24px);color:#5b6b88;margin-top:1.4vmin}
 .big-btn{background:var(--accent);color:var(--accent-ink);font-size:clamp(26px,5vmin,48px);padding:.45em 2.2em;border-radius:999px;box-shadow:0 .22em 0 var(--accent-dk)}
 .big-btn:active{transform:translateY(.15em);box-shadow:0 .07em 0 var(--accent-dk)}
 .note{color:#5b6b88;font-size:clamp(14px,2.2vmin,21px);line-height:1.55;margin:0}
+
+/* 권한 안내 */
+#s-perm{align-items:center;justify-content:center;padding:3vmin 4vmin;background:linear-gradient(#bfe6ff,#eaf7ff);color:#23324d}
+.perm{display:flex;align-items:center;gap:4vmin;max-width:1120px;width:100%}
+.perm-bt{flex:0 0 27vmin;aspect-ratio:200/260}
+.perm-bt svg{width:100%;height:100%}
+.perm-body{flex:1;min-width:0}
+.perm-body h2{margin:0 0 2vmin;font-size:clamp(26px,5vmin,50px)}
+.perm-list{display:flex;flex-direction:column;gap:1.4vmin}
+.pitem{display:flex;gap:1.8vmin;align-items:flex-start;background:#fff;border:3px solid #c9e0f5;border-radius:22px;padding:1.6vmin 2.2vmin}
+.pitem.alt{background:#fff8e6;border-color:#ffe0a3}
+.picon{font-size:clamp(26px,4.8vmin,46px);line-height:1.1}
+.pitem h3{margin:0 0 .5vmin;font-size:clamp(18px,3.1vmin,30px)}
+.pitem p{margin:0;font-size:clamp(13px,2.15vmin,20px);line-height:1.55;color:#4a5874}
+.perm-btns{display:flex;gap:2vmin;margin-top:2.6vmin;flex-wrap:wrap}
+.perm-note{margin:1.4vmin 0 0;color:#5b6b88;font-size:clamp(13px,2vmin,19px)}
+.perm-result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(231,244,255,.75);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.perm-result .ocard{background:#fff;border-color:#c9e0f5;color:#23324d;text-align:left;max-width:min(92%,760px)}
+.perm-result h3{text-align:center}
+.perm-result .row{font-size:clamp(15px,2.5vmin,24px);margin:0 0 1.2vmin}
+.perm-result .guide{background:#f2f8ff;border-radius:16px;padding:1.4vmin 1.8vmin;font-size:clamp(13px,2.1vmin,19px);line-height:1.55;color:#4a5874;margin:1.6vmin 0 2.4vmin}
+.perm-result .btn2{background:#d3ecff;color:#23324d}
+@media (max-aspect-ratio:1/1){.perm{flex-direction:column}.perm-bt{flex-basis:auto;height:18vmin}}
 
 /* 미션 선택 */
 #s-menu{padding:3vmin 4vmin calc(3vmin + env(safe-area-inset-bottom,0px));gap:2.6vmin}
@@ -185,6 +208,11 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .waving .arm-r{animation:wave .45s ease-in-out infinite alternate}
 @keyframes wave{from{transform:rotate(-140deg)}to{transform:rotate(-178deg)}}
 
+/* 버튼으로 진행 */
+.act-btn{position:absolute;left:38%;bottom:5%;transform:translateX(-50%);z-index:11;background:var(--accent);color:#fff;font-size:clamp(20px,3.8vmin,38px);padding:.45em 1.2em;border-radius:999px;box-shadow:0 .18em 0 var(--accent-dk);white-space:nowrap}
+.act-btn:active{transform:translate(-50%,.12em);box-shadow:0 .06em 0 var(--accent-dk)}
+.say-btn{position:absolute;left:64%;top:calc(8% + 24vmin);transform:translateX(-50%);z-index:11;background:var(--ok);color:#fff;font-size:clamp(20px,3.8vmin,38px);padding:.45em 1.2em;border-radius:999px;box-shadow:0 .18em 0 #1f8a52;white-space:nowrap}
+
 /* 카메라 미리보기 · 테스트 패널 */
 .cam{position:fixed;right:calc(env(safe-area-inset-right,0px) + 1.6vmin);top:calc(env(safe-area-inset-top,0px) + 9vmin);width:21vmin;aspect-ratio:4/3;border-radius:16px;overflow:hidden;border:3px solid var(--card);z-index:30;background:#222;opacity:0;pointer-events:none;transition:opacity .2s}
 .cam.on{opacity:1}
@@ -210,6 +238,36 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
   </div>
   <button class="big-btn en" id="btn-start">START</button>
   <p class="note">카메라와 마이크를 사용해요.<br>화면에서 1.5~2m 떨어져 상반신이 보이게 서 주세요.</p>
+</section>
+
+<!-- 권한 안내 -->
+<section id="s-perm" class="screen">
+  <div class="perm">
+    <div class="perm-bt" id="perm-bt"></div>
+    <div class="perm-body">
+      <h2>시작하기 전에 알려줄게요</h2>
+      <div class="perm-list">
+        <div class="pitem"><div class="picon">📷</div><div>
+          <h3>카메라로 몸 움직임을 봐요</h3>
+          <p>손 들기, 팔 벌리기, 손 흔들기를 알아보는 데 써요. 영상은 이 기기 안에서만 확인하고 저장하거나 보내지 않아요.</p>
+        </div></div>
+        <div class="pitem"><div class="picon">🎤</div><div>
+          <h3>마이크로 영어 목소리를 들어요</h3>
+          <p>따라 말한 단어를 알아듣는 데 써요. 말소리는 기기의 음성 인식 기능(애플·구글 등)으로 글자로 바뀌며, 이때 해당 회사 서버를 거칠 수 있어요. 이 게임은 녹음 파일을 저장하지 않아요.</p>
+        </div></div>
+        <div class="pitem alt"><div class="picon">👆</div><div>
+          <h3>허용하지 않아도 할 수 있어요</h3>
+          <p>카메라 없이는 화면의 동작 버튼(손 들기·팔 벌리기·손 흔들기)을 눌러 진행해요. 마이크 없이는 소리 내어 말한 뒤 “말했어요” 버튼을 눌러요. 기록에는 “버튼으로 진행”으로 남아요.</p>
+        </div></div>
+      </div>
+      <div class="perm-btns">
+        <button class="btn1" id="perm-yes">카메라·마이크 켜고 시작</button>
+        <button class="btn2" id="perm-no">버튼으로만 시작</button>
+      </div>
+      <p class="perm-note">다음에 뜨는 창에서 “허용”을 눌러 주세요.</p>
+    </div>
+  </div>
+  <div class="perm-result" id="perm-result" hidden></div>
 </section>
 
 <!-- 미션 선택 -->
@@ -265,11 +323,13 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
     <div class="wordcard" id="wordcard"></div>
     <div class="mic" id="mic">🎤 말해 보세요</div>
     <div class="fx" id="fx"></div>
+    <button class="act-btn" id="act-btn" hidden></button>
+    <button class="say-btn" id="say-btn" hidden>🗣️ 말했어요!</button>
     <div class="overlay" id="overlay"></div>
   </main>
   <footer class="tray"><span class="tray-label" id="tray-label"></span><div class="slots" id="slots"></div></footer>
 
-  <div class="debug on" id="debug">
+  <div class="debug" id="debug">
     <div><b>테스트 패널</b> <span id="d-status"></span></div>
     <div class="flags"><span><i id="f-seen"></i>사람</span><span><i id="f-raise"></i>손들기</span><span><i id="f-arms"></i>팔 벌리기</span><span><i id="f-wave"></i>손 흔들기</span></div>
     <div>들린 말: <span id="d-heard">-</span></div>
@@ -354,6 +414,12 @@ const BT_SVG = `<svg viewBox="0 0 200 260" class="bt-svg idle" aria-hidden="true
  <path d="M56 160 q44 -22 88 0 l10 82 q-54 14 -108 0z" fill="#2f5d4a"/>
  <path d="M86 150 l14 22 l14 -22z" fill="#e8743b"/>
  <rect x="112" y="196" width="34" height="26" rx="5" fill="#9a6a3e"/>
+ <g class="ears">
+  <ellipse cx="30" cy="62" rx="17" ry="31" fill="#b98a62" transform="rotate(-32 30 62)"/>
+  <ellipse cx="31" cy="64" rx="9" ry="20" fill="#e9c4a2" transform="rotate(-32 31 64)"/>
+  <ellipse cx="170" cy="62" rx="17" ry="31" fill="#b98a62" transform="rotate(32 170 62)"/>
+  <ellipse cx="169" cy="64" rx="9" ry="20" fill="#e9c4a2" transform="rotate(32 169 64)"/>
+ </g>
  <g fill="#fff" stroke="#e8ddd0" stroke-width="3">
   <circle cx="60" cy="70" r="24"/><circle cx="140" cy="70" r="24"/><circle cx="72" cy="44" r="24"/><circle cx="128" cy="44" r="24"/><circle cx="100" cy="34" r="24"/>
   <circle cx="54" cy="100" r="22"/><circle cx="146" cy="100" r="22"/><circle cx="70" cy="126" r="22"/><circle cx="130" cy="126" r="22"/><circle cx="100" cy="134" r="22"/>
@@ -547,9 +613,11 @@ function hideWord() { wordEl.classList.remove('on'); }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let activeListen = null;
 
+const CAN = { voice: false, buttonsOnly: false };
 function micBadge(on) {
-  micEl.textContent = SR ? '🎤 말해 보세요' : '🎤 음성 인식이 안 되는 기기예요 · 통과 버튼을 눌러요';
+  micEl.textContent = CAN.voice ? '🎤 말해 보세요' : '🗣️ 소리 내어 말하고 버튼을 눌러요';
   micEl.classList.toggle('on', on);
+  $('#say-btn').hidden = !(on && !CAN.voice);
 }
 
 function listen(key) {
@@ -565,8 +633,8 @@ function listen(key) {
     };
     activeListen = { skip: () => fin('skip'), cancel: () => fin('cancel') };
     micBadge(true);
-    const timer = setTimeout(() => fin('timeout'), SR ? CONFIG.listenMs : 3500);
-    if (!SR) return;
+    const timer = setTimeout(() => fin('timeout'), CAN.voice ? CONFIG.listenMs : 15000);
+    if (!CAN.voice) return;
     try {
       rec = new SR();
       rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 5;
@@ -650,16 +718,48 @@ const isWave = () => P.wave || sim();
 let landmarker = null, lastVT = -1, lastL = null;
 const waveHist = [];
 
-async function startCamera() {
-  if (P.cam === 'on' || P.cam === 'starting') return;
-  P.cam = 'starting';
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
-    video.srcObject = stream;
-    await video.play();
-    P.cam = 'on';
-  } catch (e) { P.cam = 'fail'; return; }
-  initPose();
+const VIDEO_OPTS = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } };
+async function tryMedia(c) { try { return await navigator.mediaDevices.getUserMedia(c); } catch (e) { return null; } }
+
+/* 카메라·마이크·음성 인식 허용 창을 한 번에 띄우고 결과를 돌려줌 */
+async function requestPerms() {
+  const result = { cam: false, mic: false, sr: false };
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return result;
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+  let stream = await tryMedia({ video: VIDEO_OPTS, audio: true });
+  if (stream) { result.mic = true; }
+  else {
+    stream = await tryMedia({ video: VIDEO_OPTS, audio: false });
+    const a = await tryMedia({ audio: true });
+    if (a) { result.mic = true; a.getTracks().forEach(t => t.stop()); }
+  }
+  if (stream) {
+    stream.getAudioTracks().forEach(t => { t.stop(); stream.removeTrack(t); });
+    if (stream.getVideoTracks().length) {
+      video.srcObject = stream;
+      try { await video.play(); result.cam = true; } catch (e) { result.cam = false; }
+    }
+  }
+  P.cam = result.cam ? 'on' : 'fail';
+  if (result.cam && !landmarker && P.model !== 'loading') initPose();
+  if (result.mic && SR) result.sr = await warmSR();
+  CAN.voice = result.mic && result.sr;
+  return result;
+}
+
+/* 음성 인식을 한 번 켰다 꺼서 허용 창을 미리 띄움 */
+function warmSR() {
+  return new Promise(res => {
+    let done = false;
+    const fin = v => { if (done) return; done = true; clearTimeout(t); try { r.abort(); } catch (e) {} res(v); };
+    let r;
+    try { r = new SR(); r.lang = 'en-US'; } catch (e) { return res(false); }
+    r.onstart = () => setTimeout(() => fin(true), 300);
+    r.onerror = e => fin(!(e.error === 'not-allowed' || e.error === 'service-not-allowed'));
+    r.onend = () => fin(true);
+    const t = setTimeout(() => fin(true), 6000);
+    try { r.start(); } catch (e) { fin(false); }
+  });
 }
 
 async function initPose() {
@@ -684,7 +784,7 @@ function poseLoop() {
   lastVT = vt;
   let res;
   try { res = landmarker.detectForVideo(video, performance.now()); } catch (e) { return; }
-  const L = res && res.landmarks && res.landmarks[0];
+  const L = !CAN.buttonsOnly && res && res.landmarks && res.landmarks[0];
   analyze(L);
   lastL = L || null;
   if (camEl.classList.contains('on')) drawPose(L);
@@ -1045,7 +1145,7 @@ async function finish(T, got, goal) {
   showOverlay(`<div class="ocard">
     <h3>미션 완료!</h3>
     <div class="stars">${Array.from({ length: goal }, (_, i) => starSVG(i < got)).join('')}</div>
-    <p class="stat">말하기 · 정확 ${s.exact} · 비슷한 소리 ${s.similar} · 다른 말 ${s.other} · 확인 불가 ${s.none}${s.skip ? ` · 통과 버튼 ${s.skip}` : ''}<br>
+    <p class="stat">말하기 · 정확 ${s.exact} · 비슷한 소리 ${s.similar} · 다른 말 ${s.other} · 확인 불가 ${s.none}${s.skip ? ` · 버튼으로 진행 ${s.skip}` : ''}<br>
     동작 · 성공 ${s.motion} · 놓침 ${s.motionMiss}${s.wrong ? ` · 다른 색에 손 ${s.wrong}` : ''}</p>
     <div class="obtns"><button class="btn2" data-act="menu">미션 선택</button><button class="btn1" data-act="again">다시 하기</button></div>
   </div>`);
@@ -1086,14 +1186,48 @@ function goMenu() { stopRun(); hideOverlay(); show('s-menu'); }
 /* =========================================================
    버튼 · 키보드 · 테스트 패널
    ========================================================= */
+$('#perm-bt').innerHTML = BT_SVG.replace('bt-svg idle', 'bt-svg raise');
 $('#btn-start').addEventListener('click', () => {
   if ('speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
     pickVoice();
   }
-  startCamera();
+  show('s-perm');
+});
+
+function permResult(r) {
+  const box = $('#perm-result');
+  const camLine = r.cam ? '📷 카메라: 사용해요' : '📷 카메라: 사용하지 않아요 → 화면의 동작 버튼으로 진행해요';
+  const micLine = (r.mic && r.sr) ? '🎤 마이크: 사용해요'
+    : !SR ? '🎤 마이크: 이 기기 브라우저는 음성 인식을 지원하지 않아요 → “말했어요” 버튼으로 진행해요'
+    : '🎤 마이크: 사용하지 않아요 → “말했어요” 버튼으로 진행해요';
+  box.innerHTML = `<div class="ocard">
+    <h3>일부 기능은 버튼으로 진행해요</h3>
+    <p class="row">${camLine}</p>
+    <p class="row">${micLine}</p>
+    <div class="guide"><b>보호자 안내</b> · 다시 켜려면 사파리 주소창 왼쪽의 ‘가가’ 버튼 → 웹사이트 설정에서 카메라와 마이크를 ‘허용’으로 바꾼 뒤 “다시 시도”를 눌러 주세요. 음성 인식은 설정 → 개인정보 보호 및 보안 → 음성 인식에서 Safari를 켜 주세요.</div>
+    <div class="obtns"><button class="btn2" id="perm-retry">다시 시도</button><button class="btn1" id="perm-go">이대로 시작</button></div>
+  </div>`;
+  box.hidden = false;
+  $('#perm-retry').addEventListener('click', () => { box.hidden = true; $('#perm-yes').click(); });
+  $('#perm-go').addEventListener('click', () => { box.hidden = true; show('s-menu'); });
+}
+
+$('#perm-yes').addEventListener('click', async () => {
+  const b = $('#perm-yes'); b.disabled = true; b.textContent = '허용 창을 확인해 주세요…';
+  CAN.buttonsOnly = false;
+  const r = await requestPerms();
+  b.disabled = false; b.textContent = '카메라·마이크 켜고 시작';
+  if (r.cam && r.mic && r.sr) show('s-menu'); else permResult(r);
+});
+$('#perm-no').addEventListener('click', () => {
+  CAN.buttonsOnly = true; CAN.voice = false; P.cam = 'fail';
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
   show('s-menu');
 });
+const ACT_LABEL = { balloon: '🙋 손 들기', candy: '🤗 팔 벌리기', greet: '👋 손 흔들기' };
+$('#act-btn').addEventListener('click', () => simulate());
+$('#say-btn').addEventListener('click', () => skipSpeech());
 document.querySelectorAll('[data-mission]').forEach(b => b.addEventListener('click', () => runMission(b.dataset.mission)));
 $('#btn-home').addEventListener('click', goMenu);
 overlayEl.addEventListener('click', e => {
@@ -1117,8 +1251,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 's' || e.key === 'S') skipSpeech();
 });
 
+const moveByButton = () => CAN.buttonsOnly || P.cam !== 'on' || P.model !== 'on';
 function camText() {
-  if (P.cam === 'fail') return '📷 카메라 없이 진행 (테스트 버튼 사용)';
+  if (CAN.buttonsOnly) return '👆 버튼으로 진행';
+  if (P.cam === 'fail') return '👆 카메라 없이 버튼으로 진행';
   if (P.model === 'on') return '📷 동작 인식 준비 완료';
   if (P.model === 'fail') return '📷 동작 인식을 불러오지 못했어요';
   return '📷 카메라 준비 중';
@@ -1132,7 +1268,10 @@ setInterval(() => {
   $('#f-arms').classList.toggle('on', isArmsOpen());
   $('#f-wave').classList.toggle('on', isWave());
   $('#d-heard').textContent = lastHeard;
-  if (stats) $('#d-stats').textContent = `정확 ${stats.exact} · 비슷 ${stats.similar} · 다른 말 ${stats.other} · 확인 불가 ${stats.none} · 통과 ${stats.skip}`;
+  if (stats) $('#d-stats').textContent = `정확 ${stats.exact} · 비슷 ${stats.similar} · 다른 말 ${stats.other} · 확인 불가 ${stats.none} · 버튼 ${stats.skip}`;
+  const act = $('#act-btn');
+  act.hidden = !(currentId && run && moveByButton());
+  if (currentId) act.textContent = ACT_LABEL[currentId];
   const kid = document.getElementById('kid');
   if (kid && !kid.classList.contains('hug')) kid.classList.toggle('open', isArmsOpen());
 }, 80);
