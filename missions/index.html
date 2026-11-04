@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>노리나루 마을 · 활동놀이 미션</title>
+<script>
+  /* 카카오톡 안 브라우저는 마이크 "허용"을 기억하지 못해 단어마다 허용 창이 다시 뜸.
+     카카오톡에서 열리면 기기 기본 브라우저(안드로이드: 크롬 등, 아이폰·아이패드: 사파리)로 바로 넘김. */
+  function kakaoExternalUrl(ua, href) {
+    return /KAKAOTALK/i.test(ua) ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(href) : null;
+  }
+  var KAKAO_INAPP = !!kakaoExternalUrl(navigator.userAgent, location.href);
+  if (KAKAO_INAPP) location.href = kakaoExternalUrl(navigator.userAgent, location.href);
+</script>
 <!--
   이미지 교체 (선택): 같은 폴더의 images/ 안에 아래 이름으로 넣으면 자동으로 바뀌어요. 없으면 기본 그림이 나와요.
     images/bt_idle.png   브라운 티처 기본 포즈
@@ -56,6 +65,9 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .big-btn{background:var(--accent);color:var(--accent-ink);font-size:clamp(26px,5vmin,48px);padding:.45em 2.2em;border-radius:999px;box-shadow:0 .22em 0 var(--accent-dk)}
 .big-btn:active{transform:translateY(.15em);box-shadow:0 .07em 0 var(--accent-dk)}
 .note{color:#5b6b88;font-size:clamp(14px,2.2vmin,21px);line-height:1.55;margin:0}
+.kakao-note{max-width:min(92%,560px);background:#fff6d6;border:3px solid #ffd76a;border-radius:20px;padding:1.4vmin 2vmin;color:#23324d;font-size:clamp(14px,2.2vmin,20px);line-height:1.55;text-align:center}
+.kakao-note b:first-child{display:block;font-size:1.15em;margin-bottom:.3em}
+.kakao-note .btn1{display:block;margin:1vmin auto 0;font-size:clamp(16px,2.6vmin,24px)}
 
 /* 권한 안내 */
 #s-perm{align-items:center;justify-content:center;padding:3vmin 4vmin;background:linear-gradient(#bfe6ff,#eaf7ff);color:#23324d}
@@ -78,6 +90,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .perm-result .row{font-size:clamp(15px,2.5vmin,24px);margin:0 0 1.2vmin}
 .perm-result .guide{background:#f2f8ff;border-radius:16px;padding:1.4vmin 1.8vmin;font-size:clamp(13px,2.1vmin,19px);line-height:1.55;color:#4a5874;margin:1.6vmin 0 2.4vmin}
 .perm-result .btn2{background:#d3ecff;color:#23324d}
+/* 권한 화면은 항상 밝은 화면이라, 다크 모드에서도 버튼 색을 고정 (다크 모드에서 "버튼으로만 시작"이 까맣게 안 보이던 문제) */
+#s-perm .btn2{background:#d3ecff;color:#23324d}
 .pose-wait .ocard{text-align:center;min-width:min(92%,520px)}
 .pose-wait .row{text-align:center}
 .pw-icon{font-size:clamp(44px,9vmin,90px);line-height:1;margin-bottom:1vmin}
@@ -92,7 +106,12 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .menu-head p{margin:.3vmin 0 0;color:var(--ink-soft);font-size:clamp(14px,2.2vmin,21px)}
 .cam-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:.4em 1em;font-size:clamp(13px,2vmin,19px);white-space:nowrap}
 .cards{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:2.6vmin;min-height:0}
-@media (max-aspect-ratio:1/1){.cards{grid-template-columns:1fr;overflow:auto}}
+/* 세로 화면(휴대폰): 카드를 내용 높이대로 쌓고 목록을 스크롤 (단어가 두 줄이 되면 단계 표시가 잘리던 문제) */
+@media (max-aspect-ratio:1/1){
+  .cards{display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  .cards .mcard{flex:none;overflow:visible}
+  .cards .mcard .art{flex:none;height:16vmin}
+}
 .mcard{background:var(--card);border:3px solid var(--line);border-radius:30px;padding:2.4vmin;display:flex;flex-direction:column;gap:1.3vmin;text-align:left;min-height:0;overflow:hidden;transition:transform .15s}
 .mcard:active{transform:scale(.98)}
 .mcard .num{font-size:clamp(24px,4.6vmin,46px);color:var(--accent);line-height:1}
@@ -253,6 +272,13 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
   </div>
   <button class="big-btn en" id="btn-start">START</button>
   <p class="note">카메라와 마이크를 사용해요.<br>화면에서 1.5~2m 떨어져 상반신이 보이게 서 주세요.</p>
+  <!-- 카카오톡에서 자동으로 넘어가지 않았을 때만 보이는 안내 -->
+  <div class="kakao-note" id="kakao-note" hidden>
+    <b>카카오톡 안에서 열렸어요</b>
+    여기서는 말할 때마다 마이크 허용 창이 다시 떠요.<br>
+    오른쪽 아래 <b>⋮</b> → <b>다른 브라우저로 열기</b>를 눌러 크롬·사파리에서 열어 주세요.
+    <button class="btn1" id="kakao-open">다른 브라우저로 열기</button>
+  </div>
 </section>
 
 <!-- 권한 안내 -->
@@ -1276,6 +1302,11 @@ function goMenu() { stopRun(); hideOverlay(); show('s-menu'); }
    버튼 · 키보드 · 테스트 패널
    ========================================================= */
 $('#perm-bt').innerHTML = BT_SVG.replace('bt-svg idle', 'bt-svg raise');
+// 카카오톡에서 자동으로 다른 브라우저로 넘어가지 않았으면 안내를 보여주고, 버튼으로 다시 시도
+if (window.KAKAO_INAPP) {
+  setTimeout(() => { $('#kakao-note').hidden = false; }, 1500);
+  $('#kakao-open').addEventListener('click', () => { location.href = kakaoExternalUrl(navigator.userAgent, location.href); });
+}
 $('#btn-start').addEventListener('click', () => {
   if ('speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
