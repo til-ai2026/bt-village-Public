@@ -159,8 +159,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .pick svg{height:19vmin;width:auto}
 .stars{display:flex;gap:1.6vmin;justify-content:center;margin-bottom:1.6vmin}
 .stars svg{width:9.5vmin;height:9.5vmin}
-.stars .star{position:relative;display:inline-flex}
-.stars .star.locked i{position:absolute;right:-.2em;bottom:-.1em;font-style:normal;font-size:clamp(14px,3vmin,30px);line-height:1}
+.cap-note{margin:-.6vmin auto 1.4vmin;max-width:28em;background:#f2f8ff;border-radius:12px;padding:.4em 1em;color:var(--ink-soft);font-size:clamp(13px,2vmin,19px)}
 .star-rows{display:grid;gap:1vmin;justify-content:center;margin-bottom:1vmin}
 .srow{display:flex;align-items:center;gap:2vmin}
 .srow .stars{margin:0;justify-content:flex-start}
@@ -1219,13 +1218,14 @@ async function finish(T, got, goal) {
   const m = Math.min(motionStars(got, goal), mCap), sp = Math.min(speechStars(T.words), sCap);
   const total = m + sp, max = mSlots + sSlots;
   const msg = C.messages.find(x => total >= x.min) || C.messages[C.messages.length - 1];
-  // 버튼 진행 때문에 받을 수 없는 칸은 회색 별 위에 👆 표시
-  const row = (label, n, slots, cap) => `<div class="srow"><span class="slabel">${label}</span><div class="stars">${Array.from({ length: slots }, (_, i) =>
-    `<span class="star${i >= cap ? ' locked' : ''}"${i >= cap ? ' title="버튼으로 진행해서 받을 수 없는 별"' : ''}>${starSVG(i < n)}${i >= cap ? '<i>👆</i>' : ''}</span>`).join('')}</div></div>`;
+  const row = (label, n, slots) => `<div class="srow"><span class="slabel">${label}</span><div class="stars">${Array.from({ length: slots }, (_, i) => starSVG(i < n)).join('')}</div></div>`;
+  // 버튼 진행 때문에 최대치가 낮아졌으면 안내 문구를 보여줌
+  const capped = mCap < mSlots || sCap < sSlots;
   showOverlay(`<div class="ocard">
     <h3>미션 완료!</h3>
-    <div class="star-rows">${row('동작', m, mSlots, mCap)}${row('말하기', sp, sSlots, sCap)}</div>
+    <div class="star-rows">${row('동작', m, mSlots)}${row('말하기', sp, sSlots)}</div>
     <div class="total">총 별 ${total}/${max}</div>
+    ${capped ? '<p class="cap-note">버튼으로 미션을 진행해서 별을 모두 받을 수 없어요</p>' : ''}
     <div class="endmsg"><div class="en">${msg.en}</div><div class="ko">${msg.ko}</div></div>
     <p class="stat">말하기 · 정확 ${s.exact} · 비슷한 소리 ${s.similar} · 다른 말 ${s.other} · 확인 불가 ${s.none}${s.skip ? ` · 버튼으로 진행 ${s.skip}` : ''}<br>
     동작 · 성공 ${s.motion} · 놓침 ${s.motionMiss}${s.wrong ? ` · 다른 색에 손 ${s.wrong}` : ''}</p>
