@@ -1345,16 +1345,19 @@ function useButtonsOnly() {
   if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
 }
 
-/* 카메라가 켜졌으면 동작 인식이 준비될 때까지 안내 팝업을 띄우고, 준비되면 미션 선택으로 넘어감
+/* 카메라가 켜졌으면 항상 동작 인식 안내 팝업을 띄움: 준비 중이면 기다렸다가 "준비 완료"로 바꾸고,
+   이미 준비돼 있으면(두 번째 방문부터는 파일이 저장돼 있어 금방 준비됨) 바로 "준비 완료"를 잠깐 보여준 뒤 미션 선택으로 넘어감
    (준비 전에 미션을 시작하면 버튼 진행으로 처리돼 동작 별이 최대 2개로 잘리기 때문) */
 async function menuAfterPose() {
-  if (P.cam !== 'on' || P.model === 'on') { show('s-menu'); return; }
+  if (P.cam !== 'on') { show('s-menu'); return; }
   const box = $('#pose-wait'), icon = $('#pw-icon');
   const set = (ic, title, text, spin) => {
     icon.textContent = ic; icon.classList.toggle('spin', !!spin);
     $('#pw-title').textContent = title; $('#pw-text').textContent = text;
   };
-  set('⏳', '동작 인식 준비 중', '몸짓을 알아보는 프로그램을 받고 있어요. 잠시만 기다려 주세요.', true);
+  const ready = () => set('✅', '동작 인식 준비 완료', '이제 미션을 골라요!');
+  if (P.model === 'on') ready();
+  else set('⏳', '동작 인식 준비 중', '몸짓을 알아보는 프로그램을 받고 있어요. 잠시만 기다려 주세요.', true);
   $('#pw-skip').hidden = true;
   box.hidden = false;
   let skipped = false;
@@ -1368,7 +1371,7 @@ async function menuAfterPose() {
     }, 100);
   });
   if (P.model === 'on') {
-    set('✅', '동작 인식 준비 완료', '이제 미션을 골라요!');
+    ready();
     await wait(1200);
   } else if (P.model === 'fail') {
     set('⚠️', '동작 인식을 불러오지 못했어요', '미션을 버튼으로 진행 할 수 있어요');
