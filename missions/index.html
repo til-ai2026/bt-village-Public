@@ -154,6 +154,15 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .pick svg{height:19vmin;width:auto}
 .stars{display:flex;gap:1.6vmin;justify-content:center;margin-bottom:1.6vmin}
 .stars svg{width:9.5vmin;height:9.5vmin}
+.star-rows{display:grid;gap:1vmin;justify-content:center;margin-bottom:1vmin}
+.srow{display:flex;align-items:center;gap:2vmin}
+.srow .stars{margin:0;justify-content:flex-start}
+.slabel{width:4.2em;text-align:right;font-size:clamp(18px,3vmin,30px);color:var(--ink-soft)}
+.total{font-size:clamp(20px,3.4vmin,34px);margin:.4vmin 0 1.4vmin}
+.endmsg .en{font-size:clamp(30px,6vmin,60px);color:var(--accent);line-height:1.1}
+.endmsg .ko{font-size:clamp(28px,5.4vmin,54px);line-height:1.2}
+.subtitle{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);z-index:12;background:rgba(255,255,255,.94);color:#23324d;border:3px solid #c9e0f5;border-radius:24px;padding:.25em 1em;font-size:clamp(28px,5.6vmin,58px);white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.subtitle.on{opacity:1}
 .stat{color:var(--ink-soft);font-size:clamp(13px,2.1vmin,20px);margin:1vmin 0 2.6vmin;line-height:1.6}
 .obtns{display:flex;gap:2vmin;justify-content:center}
 .btn1,.btn2{padding:.5em 1.5em;border-radius:999px;font-size:clamp(18px,3.2vmin,30px)}
@@ -323,6 +332,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
     <div class="wordcard" id="wordcard"></div>
     <div class="mic" id="mic">🎤 말해 보세요</div>
     <div class="fx" id="fx"></div>
+    <div class="subtitle" id="subtitle"></div>
     <button class="act-btn" id="act-btn" hidden></button>
     <button class="say-btn" id="say-btn" hidden>🗣️ 말했어요!</button>
     <div class="overlay" id="overlay"></div>
@@ -353,7 +363,16 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
    ========================================================= */
 const CONFIG = {
   speechLevel: 2,      // 1: 말소리만 들려도 통과 · 2: 비슷한 소리까지 통과 · 3: 정확한 단어만 통과
-  speechTries: 2,      // 말하기 기회 (안 되면 "Great try!" 하고 넘어감)
+  speechTries: 2,      // 말하기 기회 (확인 불가일 때만 다시 들음, 그래도 안 되면 "Great effort!" 하고 넘어감)
+  stars: {
+    motion: { full: 3, twoOrMore: 2, one: 1 },   // 동작 별: 목표를 채움 / 2개 이상 성공 / 딱 1개 성공 (0개 성공 = 0)
+    speech: { allPass: 2, otherwise: 1 },        // 말하기 별: 모든 단어 통과 / 그 외 (최소 1개 보장)
+    messages: [                                  // 총 별 개수가 min 이상이면 그 메시지 (위에서부터 확인)
+      { min: 5, en: 'Perfect!',      ko: '완벽해!' },
+      { min: 2, en: 'Great effort!', ko: '노력했네, 잘했어!' },
+      { min: 0, en: 'That’s okay!',  ko: '괜찮아, 잘했어!' }
+    ]
+  },
   listenMs: 6000,      // 한 번 듣는 시간
   holdMs: 300,         // 손들기·팔벌리기를 이만큼 유지해야 인정
   ttsRate: 0.85,       // 캐릭터 말하기 속도
@@ -604,6 +623,8 @@ function fx(text, color) {
   fxEl.textContent = text; fxEl.style.color = color || '';
   fxEl.classList.remove('go'); void fxEl.offsetWidth; fxEl.classList.add('go');
 }
+function showSub(text) { const s = $('#subtitle'); s.textContent = text; s.classList.add('on'); }
+function hideSub() { $('#subtitle').classList.remove('on'); }
 function showWord(text, color) { wordEl.textContent = text; wordEl.style.color = color || '#23324d'; wordEl.classList.add('on'); }
 function hideWord() { wordEl.classList.remove('on'); }
 
@@ -675,32 +696,36 @@ function passes(cat) {
 }
 const RANK = { none: 0, other: 1, similar: 2, exact: 3 };
 
+// 말하기 별 기준: 판정 단계 1·2는 정확·비슷한 소리, 3은 정확만 통과 (버튼 진행은 통과 아님)
+function starPass(cat) {
+  return CONFIG.speechLevel === 3 ? cat === 'exact' : (cat === 'exact' || cat === 'similar');
+}
+
 /* 말하기 한 단계: 캐릭터가 말함 → 아이가 따라 말함 → 판정 (아이 화면은 늘 칭찬, 기록은 그대로) */
 async function speakStep(T, key, prompt, anchor) {
   const W = WORDS[key];
   showWord(W.card, W.color);
-  let best = 'none', line = prompt;
+  let best = 'none', line = prompt, cat = 'none';
   for (let a = 0; a < CONFIG.speechTries; a++) {
     if (line) await say(T, line, anchor);
     await wait(150);
     const r = await listen(key);
     alive(T);
     if (!r.texts.length && r.err && r.err !== 'skip') lastHeard = `(${r.err})`;
-    const cat = r.err === 'skip' ? 'skip' : classify(r.texts, key);
-    if (cat !== 'skip' && RANK[cat] > RANK[best]) best = cat;
-    if (passes(cat)) {
-      stats[cat]++;
-      const word = { exact: 'Perfect!', similar: 'Good job!', other: 'Good!', skip: 'Okay!' }[cat];
-      fx(word);
-      await say(T, word);
-      hideWord();
-      return cat;
-    }
-    line = cat === 'none' ? `I can’t hear you. Say it louder! ${W.say}!` : `Almost! Say ${W.say}!`;
+    cat = r.err === 'skip' ? 'skip' : classify(r.texts, key);
+    if (cat === 'skip') { best = 'skip'; break; }
+    if (RANK[cat] > RANK[best]) best = cat;
+    if (cat !== 'none') break;              // 확인 불가일 때만 한 번 더 들음
+    line = `I can’t hear you. Say it louder! ${W.say}!`;
   }
   stats[best]++;
-  fx('👍');
-  await say(T, 'Great try!');
+  T.words.push(best);
+  // 단어마다 반응: 정확 → Perfect! / 그 외 → Great effort!
+  const [en, ko] = best === 'exact' ? ['Perfect!', '완벽해!'] : ['Great effort!', '노력했어, 잘했어!'];
+  fx(en);
+  showSub(ko);
+  await say(T, en);
+  hideSub();
   hideWord();
   return best;
 }
@@ -1110,7 +1135,7 @@ async function greetMission(T) {
   await say(T, ok ? 'Great waving!' : 'Okay! Let’s go!');
   setTeacher('idle');
 
-  let done = 0;
+  let done = 0, wavedCount = 0;
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i];
     setTries(i + 1, steps.length, '인사');
@@ -1124,7 +1149,7 @@ async function greetMission(T) {
     let cat;
     try { cat = await speakStep(T, s.key, null); } finally { clearInterval(iv); }
     if (!waved) { await say(T, 'Now wave your hand!'); waved = await waitHold(T, isWave, 0, 6000); }
-    if (waved) stats.motion++; else stats.motionMiss++;
+    if (waved) { stats.motion++; wavedCount++; } else stats.motionMiss++;
     if (waved || passes(cat)) { done++; setTray(steps.length, done, 'greet'); }
     g.el.classList.add('waving');
     fx(s.line);
@@ -1133,23 +1158,45 @@ async function greetMission(T) {
   }
   setTeacher('happy');
   await say(T, 'You said hello to everyone!');
-  await finish(T, done, steps.length);
+  await finish(T, wavedCount, steps.length);   // 동작 별: 손 흔들기 성공한 인사 수
 }
 
 /* =========================================================
    완료 화면 · 미션 실행
    ========================================================= */
+// 동작 별: 목표를 채우면(중간 실수 상관없이) full, 2개 이상 twoOrMore, 딱 1개 one, 0개 0
+function motionStars(got, goal) {
+  const M = CONFIG.stars.motion;
+  if (got >= goal) return M.full;
+  if (got >= 2) return M.twoOrMore;
+  if (got === 1) return M.one;
+  return 0;
+}
+// 말하기 별: 모든 단어 통과면 allPass, 그 외 otherwise (0개는 주지 않음)
+function speechStars(words) {
+  const S = CONFIG.stars.speech;
+  return words.length && words.every(starPass) ? S.allPass : S.otherwise;
+}
+
 async function finish(T, got, goal) {
-  hideWord(); hideBubble(); setTeacher('happy');
+  hideWord(); hideBubble(); hideSub(); setTeacher('happy');
   const s = stats;
+  const C = CONFIG.stars;
+  const mSlots = C.motion.full, sSlots = C.speech.allPass;
+  const m = motionStars(got, goal), sp = speechStars(T.words);
+  const total = m + sp, max = mSlots + sSlots;
+  const msg = C.messages.find(x => total >= x.min) || C.messages[C.messages.length - 1];
+  const row = (label, n, slots) => `<div class="srow"><span class="slabel">${label}</span><div class="stars">${Array.from({ length: slots }, (_, i) => starSVG(i < n)).join('')}</div></div>`;
   showOverlay(`<div class="ocard">
     <h3>미션 완료!</h3>
-    <div class="stars">${Array.from({ length: goal }, (_, i) => starSVG(i < got)).join('')}</div>
+    <div class="star-rows">${row('동작', m, mSlots)}${row('말하기', sp, sSlots)}</div>
+    <div class="total">총 별 ${total}/${max}</div>
+    <div class="endmsg"><div class="en">${msg.en}</div><div class="ko">${msg.ko}</div></div>
     <p class="stat">말하기 · 정확 ${s.exact} · 비슷한 소리 ${s.similar} · 다른 말 ${s.other} · 확인 불가 ${s.none}${s.skip ? ` · 버튼으로 진행 ${s.skip}` : ''}<br>
     동작 · 성공 ${s.motion} · 놓침 ${s.motionMiss}${s.wrong ? ` · 다른 색에 손 ${s.wrong}` : ''}</p>
     <div class="obtns"><button class="btn2" data-act="menu">미션 선택</button><button class="btn1" data-act="again">다시 하기</button></div>
   </div>`);
-  await speak('Mission complete! Great job!');
+  await speak(msg.en);   // 브라운 티처가 영어로 말하고, 카드에 한글 자막을 크게 보여줌
 }
 
 const MISSIONS = {
@@ -1161,7 +1208,7 @@ let currentId = null;
 
 async function runMission(id) {
   stopRun();
-  const T = { alive: true }; run = T; currentId = id;
+  const T = { alive: true, words: [] }; run = T; currentId = id;
   stats = newStats(); lastHeard = '-';
   show('s-game');
   sceneEl.className = 'scene s-' + id;
