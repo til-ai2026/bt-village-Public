@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>노리나루 마을 · 활동놀이 미션</title>
+<!--
+  이미지 교체 (선택): 같은 폴더의 images/ 안에 아래 이름으로 넣으면 자동으로 바뀌어요. 없으면 기본 그림이 나와요.
+    images/bt_idle.png   브라운 티처 기본 포즈
+    images/bt_raise.png  브라운 티처 손 든 포즈
+    images/bt_happy.png  브라운 티처 기뻐하는 포즈
+    images/bg_balloon.png  풍선 미션 배경
+    images/bg_candy.png    캔디 미션 배경
+    images/bg_greet.png    인사 미션 배경
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e7f4ff; --bg2:#d3ecff; --ink:#23324d; --ink-soft:#5b6b88; --card:#ffffff; --line:#c9e0f5;
+  --accent:#ff6b4a; --accent-dk:#d9482a; --accent-ink:#ffffff; --ok:#2fb36d; --sun:#ffc93c;
+  --veil:rgba(231,244,255,.6); --panel:rgba(255,255,255,.94);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c2438; --bg2:#26314b; --ink:#eef4ff; --ink-soft:#a9b8d4; --card:#2b3753; --line:#3c4a6a;
+    --veil:rgba(28,36,56,.6); --panel:rgba(43,55,83,.95); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c2438; --bg2:#26314b; --ink:#eef4ff; --ink-soft:#a9b8d4; --card:#2b3753; --line:#3c4a6a;
+  --veil:rgba(28,36,56,.6); --panel:rgba(43,55,83,.95); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Jua','Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.en{font-family:'Fredoka','Jua',system-ui,sans-serif;font-weight:600}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+[hidden]{display:none!important}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.screen.active{display:flex}
+
+/* 시작 화면 */
+#s-start{align-items:center;justify-content:center;gap:3vmin;text-align:center;
+  background:radial-gradient(circle at 50% 120%, #9fdc8c 0 28%, transparent 28.2%), linear-gradient(#bfe6ff,#eaf7ff)}
+#s-start .bt-hero{height:34vmin;aspect-ratio:200/260}
+#s-start .bt-hero svg{width:100%;height:100%}
+.logo{margin:0;font-size:clamp(38px,8.5vmin,90px);color:#23324d;line-height:1}
+.logo-en{font-size:clamp(14px,2.4vmin,24px);color:#5b6b88;margin-top:-1vmin}
+.big-btn{background:var(--accent);color:var(--accent-ink);font-size:clamp(26px,5vmin,48px);padding:.45em 2.2em;border-radius:999px;box-shadow:0 .22em 0 var(--accent-dk)}
+.big-btn:active{transform:translateY(.15em);box-shadow:0 .07em 0 var(--accent-dk)}
+.note{color:#5b6b88;font-size:clamp(14px,2.2vmin,21px);line-height:1.55;margin:0}
+
+/* 미션 선택 */
+#s-menu{padding:3vmin 4vmin calc(3vmin + env(safe-area-inset-bottom,0px));gap:2.6vmin}
+.menu-head{display:flex;align-items:center;justify-content:space-between;gap:2vmin}
+.menu-head h2{margin:0;font-size:clamp(26px,5vmin,50px)}
+.menu-head p{margin:.3vmin 0 0;color:var(--ink-soft);font-size:clamp(14px,2.2vmin,21px)}
+.cam-chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:.4em 1em;font-size:clamp(13px,2vmin,19px);white-space:nowrap}
+.cards{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:2.6vmin;min-height:0}
+@media (max-aspect-ratio:1/1){.cards{grid-template-columns:1fr;overflow:auto}}
+.mcard{background:var(--card);border:3px solid var(--line);border-radius:30px;padding:2.4vmin;display:flex;flex-direction:column;gap:1.3vmin;text-align:left;min-height:0;overflow:hidden;transition:transform .15s}
+.mcard:active{transform:scale(.98)}
+.mcard .num{font-size:clamp(24px,4.6vmin,46px);color:var(--accent);line-height:1}
+.mcard .art{flex:1;min-height:12vmin;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:22px}
+.mcard .art svg{height:78%;max-height:26vmin;width:auto;max-width:90%}
+.mcard h3{margin:0;font-size:clamp(22px,3.8vmin,38px)}
+.mcard p{margin:0;color:var(--ink-soft);font-size:clamp(13px,2vmin,19px);line-height:1.45}
+.wchips{display:flex;flex-wrap:wrap;gap:.7vmin}
+.wchip{background:var(--bg2);border-radius:999px;padding:.2em .75em;font-size:clamp(12px,1.9vmin,18px)}
+.levels{display:flex;gap:.7vmin;flex-wrap:wrap}
+.lv{padding:.25em .85em;border-radius:999px;font-size:clamp(12px,1.9vmin,18px);border:2px solid var(--line);color:var(--ink-soft)}
+.lv.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* 게임 화면 */
+#s-game{gap:1.2vmin;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 1.2vmin)}
+.topbar{display:flex;align-items:center;gap:1.4vmin;padding:1.2vmin 1.6vmin 0}
+.tb-btn{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:.35em .95em;font-size:clamp(14px,2.3vmin,22px)}
+.g-title{flex:1;font-size:clamp(18px,3.2vmin,32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:.3em .95em;font-size:clamp(14px,2.3vmin,22px);display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.chip .dot{width:1em;height:1em;border-radius:50%}
+.scene{position:relative;flex:1;min-height:0;margin:0 1.6vmin;border-radius:26px;overflow:hidden}
+.scene.s-balloon{background:url('images/bg_balloon.png') center/cover no-repeat, linear-gradient(180deg,#fff8ec 0%,#ffeed6 68%,#f2d2a6 68.3%,#e8c08e 100%)}
+.scene.s-candy{background:url('images/bg_candy.png') center/cover no-repeat, linear-gradient(180deg,#d6efff 0%,#fde9f3 70%,#bfe3b0 70.3%,#a9d79a 100%)}
+.scene.s-greet{background:url('images/bg_greet.png') center/cover no-repeat, linear-gradient(180deg,#b9e3ff 0%,#eaf7ff 68%,#bfe3a8 68.3%,#a6d58d 100%)}
+.layer{position:absolute;inset:0;z-index:2}
+.tray{display:flex;align-items:center;gap:1.6vmin;margin:0 1.6vmin;padding:.9vmin 2.2vmin;background:var(--card);border:2px solid var(--line);border-radius:999px;min-height:8vmin}
+.tray-label{font-size:clamp(16px,2.7vmin,27px);white-space:nowrap}
+.slots{display:flex;gap:1.2vmin}
+.slot{width:6vmin;height:6vmin;border-radius:50%;border:3px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:3.6vmin}
+.slot.full{border-style:solid;border-color:transparent;animation:pop .45s}
+.slot svg{width:92%;height:92%}
+@keyframes pop{50%{transform:scale(1.35)}}
+
+/* 브라운 티처 */
+.bt{position:absolute;left:1.5%;bottom:3%;height:46%;aspect-ratio:200/260;z-index:5}
+.scene.s-greet .bt{height:34%}
+.bt img,.bt svg{width:100%;height:100%;object-fit:contain;display:block}
+.bt.talk{animation:talk .32s ease-in-out infinite alternate}
+@keyframes talk{to{transform:translateY(-1.5%)}}
+.bt-svg .up,.bt-svg .up-l{display:none}
+.bt-svg.raise .up,.bt-svg.happy .up,.bt-svg.happy .up-l{display:inline}
+.bt-svg.raise .down-r,.bt-svg.happy .down-r,.bt-svg.happy .down-l{display:none}
+
+/* 말풍선·단어·마이크·효과 */
+.bubble{position:absolute;z-index:9;background:#fff;color:#23324d;border:3px solid #c9e0f5;border-radius:24px;padding:.4em .9em;font-family:'Fredoka','Jua',sans-serif;font-weight:600;font-size:clamp(18px,3.5vmin,38px);max-width:38%;opacity:0;transition:opacity .2s;pointer-events:none;line-height:1.25}
+.bubble.on{opacity:1}
+.wordcard{position:absolute;left:64%;top:8%;transform:translateX(-50%) scale(.8);z-index:9;background:#fff;border:5px solid var(--accent);border-radius:30px;padding:.25em 1.1em;font-family:'Fredoka',sans-serif;font-weight:600;font-size:clamp(36px,9vmin,100px);opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.wordcard.on{opacity:1;transform:translateX(-50%) scale(1)}
+.mic{position:absolute;left:64%;top:calc(8% + 16vmin);transform:translateX(-50%);z-index:9;background:var(--ok);color:#fff;border-radius:999px;padding:.35em 1.1em;font-size:clamp(16px,2.8vmin,28px);display:none;white-space:nowrap}
+.mic.on{display:block;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.08)}}
+.fx{position:absolute;left:64%;top:44%;transform:translate(-50%,-50%);z-index:10;font-family:'Fredoka',sans-serif;font-weight:600;font-size:clamp(52px,13vmin,150px);color:var(--accent);-webkit-text-stroke:4px #fff;paint-order:stroke fill;opacity:0;pointer-events:none;white-space:nowrap}
+.fx.go{animation:fxpop 1.1s ease-out}
+@keyframes fxpop{0%{opacity:0;transform:translate(-50%,-30%) scale(.5)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-85%) scale(1)}}
+
+/* 오버레이 */
+.overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:var(--veil);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.overlay.on{display:flex}
+.ocard{background:var(--card);border:3px solid var(--line);border-radius:34px;padding:3vmin 4.5vmin;text-align:center;max-width:92%}
+.ocard h3{margin:0 0 2.2vmin;font-size:clamp(28px,5.4vmin,56px)}
+.pick{display:flex;gap:3vmin;justify-content:center}
+.pick button{background:var(--bg2);border-radius:28px;padding:2vmin 3.2vmin;display:flex;flex-direction:column;align-items:center;gap:1vmin;font-family:'Fredoka',sans-serif;font-weight:600;font-size:clamp(20px,3.6vmin,36px);border:4px solid transparent}
+.pick button:active{border-color:var(--accent)}
+.pick svg{height:19vmin;width:auto}
+.stars{display:flex;gap:1.6vmin;justify-content:center;margin-bottom:1.6vmin}
+.stars svg{width:9.5vmin;height:9.5vmin}
+.stat{color:var(--ink-soft);font-size:clamp(13px,2.1vmin,20px);margin:1vmin 0 2.6vmin;line-height:1.6}
+.obtns{display:flex;gap:2vmin;justify-content:center}
+.btn1,.btn2{padding:.5em 1.5em;border-radius:999px;font-size:clamp(18px,3.2vmin,30px)}
+.btn1{background:var(--accent);color:var(--accent-ink)}
+.btn2{background:var(--bg2)}
+
+/* 풍선 미션 */
+.bunting{position:absolute;left:0;top:0;width:100%;height:11%}
+.balloon{position:absolute;left:66%;top:9%;width:17vmin;transform:translateX(-50%);z-index:4}
+.balloon svg{width:100%;height:auto;display:block}
+.balloon.rise{animation:rise var(--rise,3s) cubic-bezier(.2,.7,.3,1) both, bob 2.4s ease-in-out var(--rise,3s) infinite alternate}
+@keyframes rise{from{transform:translate(-50%,110vh)}to{transform:translate(-50%,0)}}
+@keyframes bob{from{transform:translate(-50%,0) rotate(-3deg)}to{transform:translate(-50%,-3%) rotate(3deg)}}
+.balloon.away{animation:away 1s ease-in both}
+@keyframes away{to{transform:translate(-20%,-120vh) rotate(14deg);opacity:.4}}
+.balloon.got{animation:got .8s ease-in both}
+@keyframes got{to{transform:translate(-50%,62vh) scale(.25);opacity:0}}
+
+/* 캔디 미션 · 사람 공통 */
+.arm{transform-box:fill-box;transform-origin:50% 7%;transition:transform .18s ease-out}
+.kid{position:absolute;left:64%;bottom:3%;height:52%;aspect-ratio:200/300;transform:translateX(-50%);z-index:3}
+.kid svg,.person svg,.win-kid svg{width:100%;height:100%;display:block}
+.kid.open .arm-l{transform:rotate(105deg)}
+.kid.open .arm-r{transform:rotate(-105deg)}
+.kid.hug .arm-l{transform:rotate(50deg)}
+.kid.hug .arm-r{transform:rotate(-50deg)}
+.candy{position:absolute;left:64%;top:0;width:25vmin;z-index:4;opacity:0;transform:translate(-50%,-100%)}
+.candy svg{width:100%;height:auto;display:block}
+
+/* 인사 미션 */
+.bldg{position:absolute;bottom:28%;width:27%;height:62%}
+.roof{position:absolute;left:-7%;right:-7%;top:0;height:30%;background:var(--roof);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.wall{position:absolute;left:0;right:0;bottom:0;height:72%;background:var(--wall);border-radius:8px 8px 0 0;box-shadow:inset 0 -1vmin 0 rgba(0,0,0,.06)}
+.win{position:absolute;top:12%;right:9%;width:38%;height:34%;border:1vmin solid #fff;border-radius:12px;overflow:hidden;background:#cfeaff}
+.win.deco::before,.win.deco::after{content:"";position:absolute;background:#fff}
+.win.deco::before{left:50%;top:0;bottom:0;width:.8vmin;transform:translateX(-50%)}
+.win.deco::after{top:50%;left:0;right:0;height:.8vmin;transform:translateY(-50%)}
+.win-kid{position:absolute;left:50%;bottom:-100%;height:200%;aspect-ratio:200/300;transform:translate(-50%,60%);transition:transform .6s ease-out}
+.win.show .win-kid{transform:translate(-50%,0)}
+.shutter{position:absolute;top:0;bottom:0;width:50%;background:#e9a86a;border:.4vmin solid #c98447;transition:transform .5s ease;z-index:2}
+.shutter.l{left:0;transform-origin:left center}
+.shutter.r{right:0;transform-origin:right center}
+.win.open .shutter{transform:scaleX(.06)}
+.doorway{position:absolute;bottom:0;left:12%;width:34%;height:56%;background:#4e3424;border-radius:40% 40% 0 0 / 22% 22% 0 0}
+.door{position:absolute;inset:0;background:#b86b3c;border-radius:inherit;transform-origin:left center;transition:transform .55s ease;z-index:2;box-shadow:inset 0 0 0 .5vmin #9a5530}
+.door::after{content:"";position:absolute;right:14%;top:52%;width:1.3vmin;height:1.3vmin;border-radius:50%;background:#ffd36b}
+.doorway.open .door{transform:scaleX(.1)}
+.person{position:absolute;left:50%;bottom:-8%;aspect-ratio:200/300;transform:translate(-50%,10%) scale(.85);opacity:0;transition:transform .5s ease-out,opacity .4s;z-index:3}
+.person.adult{height:128%}
+.person.child{height:96%}
+.person.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.waving .arm-r{animation:wave .45s ease-in-out infinite alternate}
+@keyframes wave{from{transform:rotate(-140deg)}to{transform:rotate(-178deg)}}
+
+/* 카메라 미리보기 · 테스트 패널 */
+.cam{position:fixed;right:calc(env(safe-area-inset-right,0px) + 1.6vmin);top:calc(env(safe-area-inset-top,0px) + 9vmin);width:21vmin;aspect-ratio:4/3;border-radius:16px;overflow:hidden;border:3px solid var(--card);z-index:30;background:#222;opacity:0;pointer-events:none;transition:opacity .2s}
+.cam.on{opacity:1}
+.cam video,.cam canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.debug{position:fixed;right:calc(env(safe-area-inset-right,0px) + 1.6vmin);bottom:calc(env(safe-area-inset-bottom,0px) + 11vmin);z-index:31;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:16px;padding:1.2vmin 1.4vmin;font-family:system-ui,sans-serif;font-size:clamp(11px,1.65vmin,15px);line-height:1.55;width:min(36vmin,290px);display:none}
+.debug.on{display:block}
+.flags span{display:inline-flex;align-items:center;gap:.3em;margin-right:.6em;white-space:nowrap}
+.flags i{width:.8em;height:.8em;border-radius:50%;background:#c3ccd9;display:inline-block}
+.flags i.on{background:var(--ok)}
+.dbtn{display:block;width:100%;margin-top:.6vmin;background:var(--bg2);border-radius:10px;padding:.45em;font-size:inherit;text-align:center}
+.debug select{font-size:inherit;margin-left:.3em}
+@media (prefers-reduced-motion:reduce){.bt.talk,.mic.on{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- 시작 -->
+<section id="s-start" class="screen active">
+  <div class="bt-hero" id="hero"></div>
+  <div>
+    <h1 class="logo">노리나루 마을</h1>
+    <div class="logo-en en">NORINARU VILLAGE · 활동놀이</div>
+  </div>
+  <button class="big-btn en" id="btn-start">START</button>
+  <p class="note">카메라와 마이크를 사용해요.<br>화면에서 1.5~2m 떨어져 상반신이 보이게 서 주세요.</p>
+</section>
+
+<!-- 미션 선택 -->
+<section id="s-menu" class="screen">
+  <div class="menu-head">
+    <div>
+      <h2>오늘의 미션을 골라요</h2>
+      <p>몸으로 움직이고, 영어로 말해 봐요.</p>
+    </div>
+    <span class="cam-chip" id="cam-chip">📷 카메라 준비 중</span>
+  </div>
+  <div class="cards">
+    <button class="mcard" data-mission="balloon">
+      <span class="num en">01</span>
+      <div class="art" id="art-balloon"></div>
+      <h3>풍선 모으기</h3>
+      <p>내 색 풍선이 오면 손을 들어요. 다른 색은 기다려요.</p>
+      <div class="wchips en"><span class="wchip">Balloon</span><span class="wchip">Red</span><span class="wchip">Yellow</span><span class="wchip">Blue</span><span class="wchip">One</span><span class="wchip">Two</span><span class="wchip">Three</span></div>
+      <div class="levels"><span class="lv on">1단계</span><span class="lv">🔒 2단계</span><span class="lv">🔒 3단계</span></div>
+    </button>
+    <button class="mcard" data-mission="candy">
+      <span class="num en">02</span>
+      <div class="art" id="art-candy"></div>
+      <h3>캔디 받기</h3>
+      <p>팔을 활짝 벌려서 떨어지는 왕사탕을 받아요.</p>
+      <div class="wchips en"><span class="wchip">Candy</span><span class="wchip">Got it!</span><span class="wchip">One</span><span class="wchip">Two</span><span class="wchip">Three</span></div>
+      <div class="levels"><span class="lv on">1단계</span><span class="lv">🔒 2단계</span><span class="lv">🔒 3단계</span></div>
+    </button>
+    <button class="mcard" data-mission="greet">
+      <span class="num en">03</span>
+      <div class="art" id="art-greet"></div>
+      <h3>인사하기</h3>
+      <p>문과 창문에서 나온 친구에게 손을 흔들며 따라 인사해요.</p>
+      <div class="wchips en"><span class="wchip">Hi!</span><span class="wchip">Hello!</span><span class="wchip">Good morning!</span></div>
+      <div class="levels"><span class="lv on">1단계</span><span class="lv">🔒 2단계</span><span class="lv">🔒 3단계</span></div>
+    </button>
+  </div>
+</section>
+
+<!-- 게임 -->
+<section id="s-game" class="screen">
+  <header class="topbar">
+    <button class="tb-btn" id="btn-home">미션 선택</button>
+    <div class="g-title" id="g-title"></div>
+    <span class="chip" id="chip-my" hidden><span class="dot" id="my-dot"></span><span id="my-text"></span></span>
+    <span class="chip" id="chip-try"></span>
+    <button class="tb-btn" id="btn-debug" aria-label="테스트 패널">🛠</button>
+  </header>
+  <main class="scene" id="scene">
+    <div class="layer" id="layer"></div>
+    <div class="bt" id="bt"></div>
+    <div class="bubble" id="bubble"></div>
+    <div class="wordcard" id="wordcard"></div>
+    <div class="mic" id="mic">🎤 말해 보세요</div>
+    <div class="fx" id="fx"></div>
+    <div class="overlay" id="overlay"></div>
+  </main>
+  <footer class="tray"><span class="tray-label" id="tray-label"></span><div class="slots" id="slots"></div></footer>
+
+  <div class="debug on" id="debug">
+    <div><b>테스트 패널</b> <span id="d-status"></span></div>
+    <div class="flags"><span><i id="f-seen"></i>사람</span><span><i id="f-raise"></i>손들기</span><span><i id="f-arms"></i>팔 벌리기</span><span><i id="f-wave"></i>손 흔들기</span></div>
+    <div>들린 말: <span id="d-heard">-</span></div>
+    <div id="d-stats"></div>
+    <label>말하기 판정<select id="d-level">
+      <option value="1">1 · 말소리만 들려도</option>
+      <option value="2" selected>2 · 비슷한 소리까지</option>
+      <option value="3">3 · 정확한 단어만</option>
+    </select></label>
+    <button class="dbtn" id="d-sim">🙋 동작 대신하기 (스페이스)</button>
+    <button class="dbtn" id="d-skip">🎤 말하기 통과 (S)</button>
+    <button class="dbtn" id="d-cam">📷 카메라 화면 보기</button>
+  </div>
+</section>
+
+<div class="cam" id="cam"><video id="video" playsinline muted autoplay></video><canvas id="canvas"></canvas></div>
+
+<script type="module">
+/* =========================================================
+   설정 — 숫자만 바꿔서 난이도를 조절할 수 있어요
+   ========================================================= */
+const CONFIG = {
+  speechLevel: 2,      // 1: 말소리만 들려도 통과 · 2: 비슷한 소리까지 통과 · 3: 정확한 단어만 통과
+  speechTries: 2,      // 말하기 기회 (안 되면 "Great try!" 하고 넘어감)
+  listenMs: 6000,      // 한 번 듣는 시간
+  holdMs: 300,         // 손들기·팔벌리기를 이만큼 유지해야 인정
+  ttsRate: 0.85,       // 캐릭터 말하기 속도
+  balloon: { level: 1, levels: {
+    1: { goal: 3, tries: 5, colors: ['red', 'yellow', 'blue'], showMs: 4500, riseSec: 3.2 },
+    2: { goal: 4, tries: 7, colors: ['red', 'yellow', 'blue', 'green'], showMs: 3500, riseSec: 2.4 },
+    3: { goal: 5, tries: 9, colors: ['red', 'yellow', 'blue', 'green', 'purple'], showMs: 2800, riseSec: 1.8 }
+  }},
+  candy: { level: 1, levels: {
+    1: { goal: 3, tries: 5, fallSec: 6 },
+    2: { goal: 4, tries: 6, fallSec: 4.5 },
+    3: { goal: 5, tries: 7, fallSec: 3.2 }
+  }},
+  greet: { level: 1, steps: [
+    { b: 'A', from: 'door',   key: 'hi',          line: 'Hi!',           reply: 'Nice to meet you!' },
+    { b: 'B', from: 'door',   key: 'hello',       line: 'Hello!',        reply: 'Hello, friend!' },
+    { b: 'A', from: 'window', key: 'goodmorning', line: 'Good morning!', reply: 'Have a nice day!' }
+  ]}
+};
+
+const COLORS = {
+  red:    { en: 'Red',    ko: '빨강', hex: '#ef3b3b' },
+  yellow: { en: 'Yellow', ko: '노랑', hex: '#ffc928' },
+  blue:   { en: 'Blue',   ko: '파랑', hex: '#3a8cf0' },
+  green:  { en: 'Green',  ko: '초록', hex: '#3cc46b' },
+  purple: { en: 'Purple', ko: '보라', hex: '#9a5cf0' }
+};
+const NUM = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+
+/* 말하기 정답 목록 — 아이 발음을 고려해 비슷한 소리를 넣어 두었어요. 테스트하며 계속 추가하세요. */
+const WORDS = {
+  red:    { say: 'Red',    card: 'Red',    color: '#ef3b3b', exact: ['red'],    similar: ['read','wed','rad','rid','ret','bread','fred','reds','redd'] },
+  yellow: { say: 'Yellow', card: 'Yellow', color: '#e0a800', exact: ['yellow'], similar: ['yello','jello','hello','fellow','mellow','yell','yellows','yolo'] },
+  blue:   { say: 'Blue',   card: 'Blue',   color: '#3a8cf0', exact: ['blue'],   similar: ['blew','blu','glue','flu','bloo','boo','blues','clue'] },
+  green:  { say: 'Green',  card: 'Green',  color: '#2fa85a', exact: ['green'],  similar: ['grin','queen','grain','cream','greene','greens','clean'] },
+  purple: { say: 'Purple', card: 'Purple', color: '#8a4ce8', exact: ['purple'], similar: ['purpl','people','pupil','popple','purples','burple'] },
+  one:    { say: 'One',    card: 'One · 1',   color: '#ff6b4a', exact: ['one','1'],   similar: ['won','on','wan','want','juan','when','fun'] },
+  two:    { say: 'Two',    card: 'Two · 2',   color: '#ff6b4a', exact: ['two','2'],   similar: ['to','too','tu','do','true','tooth','chew'] },
+  three:  { say: 'Three',  card: 'Three · 3', color: '#ff6b4a', exact: ['three','3'], similar: ['tree','free','sree','tri','sri','tea','trees','street'] },
+  candy:  { say: 'Candy',  card: 'Candy',  color: '#ff5d8f', exact: ['candy'],  similar: ['candi','kandy','candies','andy','handy','can d','kenny','cindy','sandy'] },
+  gotit:  { say: 'Got it', card: 'Got it!', color: '#ff6b4a', exact: ['got it','gotit'], similar: ['got','gotta','goddit','got cha','gotcha','godot','got that','got eat'] },
+  hi:     { say: 'Hi',     card: 'Hi!',    color: '#ff6b4a', exact: ['hi'],     similar: ['high','hai','hey','hy','hiya','i','eye'] },
+  hello:  { say: 'Hello',  card: 'Hello!', color: '#ff6b4a', exact: ['hello'],  similar: ['hallo','helo','hullo','yellow','hollow','halo','jello'] },
+  goodmorning: { say: 'Good morning', card: 'Good morning!', color: '#ff6b4a', exact: ['good morning','goodmorning'], similar: ['morning','good mornin','could morning','good mooning','good moaning','good mourning','mornin'] }
+};
+
+const IMG = { idle: 'images/bt_idle.png', raise: 'images/bt_raise.png', happy: 'images/bt_happy.png' };
+
+/* =========================================================
+   그림 (이미지가 없을 때 쓰는 기본 그림)
+   ========================================================= */
+const BT_SVG = `<svg viewBox="0 0 200 260" class="bt-svg idle" aria-hidden="true">
+ <ellipse cx="100" cy="250" rx="60" ry="8" fill="rgba(0,0,0,.08)"/>
+ <path class="down-l" d="M58 168 q-16 30 -10 60" stroke="#2f5d4a" stroke-width="18" stroke-linecap="round" fill="none"/>
+ <path class="down-r" d="M142 168 q16 30 10 60" stroke="#2f5d4a" stroke-width="18" stroke-linecap="round" fill="none"/>
+ <g class="up-l"><path d="M58 168 q-30 -12 -36 -48" stroke="#2f5d4a" stroke-width="18" stroke-linecap="round" fill="none"/><circle cx="22" cy="116" r="12" fill="#fff" stroke="#e8ddd0" stroke-width="3"/></g>
+ <g class="up"><path d="M142 168 q30 -12 36 -48" stroke="#2f5d4a" stroke-width="18" stroke-linecap="round" fill="none"/><circle cx="178" cy="116" r="12" fill="#fff" stroke="#e8ddd0" stroke-width="3"/></g>
+ <path d="M56 160 q44 -22 88 0 l10 82 q-54 14 -108 0z" fill="#2f5d4a"/>
+ <path d="M86 150 l14 22 l14 -22z" fill="#e8743b"/>
+ <rect x="112" y="196" width="34" height="26" rx="5" fill="#9a6a3e"/>
+ <g fill="#fff" stroke="#e8ddd0" stroke-width="3">
+  <circle cx="60" cy="70" r="24"/><circle cx="140" cy="70" r="24"/><circle cx="72" cy="44" r="24"/><circle cx="128" cy="44" r="24"/><circle cx="100" cy="34" r="24"/>
+  <circle cx="54" cy="100" r="22"/><circle cx="146" cy="100" r="22"/><circle cx="70" cy="126" r="22"/><circle cx="130" cy="126" r="22"/><circle cx="100" cy="134" r="22"/>
+ </g>
+ <circle cx="100" cy="86" r="50" fill="#fff"/>
+ <ellipse cx="80" cy="84" rx="8" ry="10" fill="#3a2a1e"/><ellipse cx="120" cy="84" rx="8" ry="10" fill="#3a2a1e"/>
+ <circle cx="83" cy="80" r="3" fill="#fff"/><circle cx="123" cy="80" r="3" fill="#fff"/>
+ <ellipse cx="100" cy="100" rx="6" ry="4" fill="#8a5a3a"/>
+ <path d="M90 108 q10 9 20 0" stroke="#8a5a3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+ <circle cx="68" cy="102" r="7" fill="#ffb8b0" opacity=".7"/><circle cx="132" cy="102" r="7" fill="#ffb8b0" opacity=".7"/>
+</svg>`;
+
+function personSVG({ shirt = '#9fd4b9', pants = '#2f3a66', hair = 'bob', hairColor = '#6b4630', skin = '#ffd9b8' } = {}) {
+  const back = hair === 'bob'
+    ? `<path d="M56 74 q0 -54 44 -54 q44 0 44 54 l2 44 q-14 8 -24 0 l-2 -40 h-40 l-2 40 q-10 8 -24 0z" fill="${hairColor}"/>`
+    : hair === 'pig' ? `<circle cx="56" cy="80" r="16" fill="${hairColor}"/><circle cx="144" cy="80" r="16" fill="${hairColor}"/>` : '';
+  const front = hair === 'short'
+    ? `<path d="M62 70 q2 -40 38 -42 q36 2 38 42 q-8 -14 -20 -18 q-18 8 -36 2 q-12 4 -20 16z" fill="${hairColor}"/>`
+    : `<path d="M62 68 q4 -42 38 -44 q34 2 38 44 q-20 -18 -38 -16 q-18 -2 -38 16z" fill="${hairColor}"/>`;
+  return `<svg viewBox="0 0 200 300" aria-hidden="true">
+  <g class="arm arm-l"><rect x="52" y="126" width="22" height="80" rx="11" fill="${shirt}"/><circle cx="63" cy="208" r="12" fill="${skin}"/></g>
+  <g class="arm arm-r"><rect x="126" y="126" width="22" height="80" rx="11" fill="${shirt}"/><circle cx="137" cy="208" r="12" fill="${skin}"/></g>
+  <rect x="74" y="205" width="22" height="72" rx="10" fill="${pants}"/><rect x="104" y="205" width="22" height="72" rx="10" fill="${pants}"/>
+  <ellipse cx="85" cy="281" rx="16" ry="8" fill="#5b4636"/><ellipse cx="115" cy="281" rx="16" ry="8" fill="#5b4636"/>
+  <rect x="68" y="118" width="64" height="98" rx="20" fill="${shirt}"/>
+  ${back}
+  <rect x="92" y="104" width="16" height="18" fill="${skin}"/>
+  <circle cx="100" cy="72" r="38" fill="${skin}"/>
+  ${front}
+  <circle cx="86" cy="78" r="5" fill="#3a2a1e"/><circle cx="114" cy="78" r="5" fill="#3a2a1e"/>
+  <path d="M90 92 q10 9 20 0" stroke="#c0574a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="76" cy="90" r="6" fill="#ffb3a7" opacity=".7"/><circle cx="124" cy="90" r="6" fill="#ffb3a7" opacity=".7"/>
+</svg>`;
+}
+
+function balloonSVG(hex) {
+  return `<svg viewBox="0 0 100 160" aria-hidden="true">
+  <path d="M50 114 C 44 130, 58 140, 50 158" stroke="#9a8a7a" stroke-width="2" fill="none"/>
+  <ellipse cx="50" cy="55" rx="40" ry="50" fill="${hex}"/>
+  <path d="M44 104 L56 104 L50 114 Z" fill="${hex}"/>
+  <ellipse cx="35" cy="36" rx="9" ry="15" fill="#fff" opacity=".45" transform="rotate(-20 35 36)"/>
+</svg>`;
+}
+
+const CANDY_SVG = `<svg viewBox="0 0 220 130" aria-hidden="true">
+ <path d="M48 65 L6 30 L14 65 L6 100 Z" fill="#ff9ec2"/>
+ <path d="M172 65 L214 30 L206 65 L214 100 Z" fill="#ff9ec2"/>
+ <circle cx="110" cy="65" r="60" fill="#ff5d8f"/>
+ <path d="M70 65 a40 40 0 0 1 80 0" stroke="#fff" stroke-width="11" fill="none" stroke-linecap="round"/>
+ <path d="M85 65 a25 25 0 0 0 50 0" stroke="#ffd1e0" stroke-width="10" fill="none" stroke-linecap="round"/>
+ <path d="M100 65 a10 10 0 0 1 20 0" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/>
+ <ellipse cx="84" cy="34" rx="14" ry="8" fill="#fff" opacity=".5" transform="rotate(-25 84 34)"/>
+</svg>`;
+
+const HOUSES_SVG = `<svg viewBox="0 0 200 140" aria-hidden="true">
+ <path d="M18 62 L60 22 L102 62Z" fill="#e2725b"/><rect x="26" y="62" width="68" height="70" rx="3" fill="#ffe2b8"/>
+ <rect x="36" y="92" width="22" height="40" rx="10" fill="#b86b3c"/><rect x="66" y="72" width="20" height="16" rx="3" fill="#cfeaff"/>
+ <path d="M100 70 L146 30 L192 70Z" fill="#6aa5d8"/><rect x="108" y="70" width="76" height="62" rx="3" fill="#fff0d6"/>
+ <rect x="135" y="96" width="22" height="36" rx="10" fill="#b86b3c"/>
+ <circle cx="47" cy="84" r="6" fill="#ffd9b8"/><path d="M41 78 q6 -6 12 0" stroke="#6b4630" stroke-width="4" fill="none"/>
+</svg>`;
+
+function starSVG(on) {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.2l7.1-.6z" fill="${on ? '#ffc93c' : '#d9e2ee'}"/></svg>`;
+}
+
+function buntingSVG() {
+  const cols = ['#ff6b4a', '#ffc93c', '#3a8cf0', '#3cc46b', '#ff9ec2'];
+  let tri = '';
+  for (let i = 0; i < 15; i++) {
+    const x = 34 + i * 66;
+    const y = 10 + 30 * (1 - Math.pow((x - 500) / 500, 2));
+    tri += `<path d="M${x - 22} ${y} L${x + 22} ${y} L${x} ${y + 40}Z" fill="${cols[i % cols.length]}"/>`;
+  }
+  return `<svg class="bunting" viewBox="0 0 1000 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 10 Q500 70 1000 10" stroke="#c9a27a" stroke-width="3" fill="none"/>${tri}</svg>`;
+}
+
+/* =========================================================
+   화면 요소
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const sceneEl = $('#scene'), layer = $('#layer'), btEl = $('#bt'), bubbleEl = $('#bubble');
+const wordEl = $('#wordcard'), micEl = $('#mic'), fxEl = $('#fx'), overlayEl = $('#overlay');
+const video = $('#video'), canvas = $('#canvas'), camEl = $('#cam');
+
+$('#hero').innerHTML = BT_SVG;
+$('#art-balloon').innerHTML = `<svg viewBox="0 0 300 170" aria-hidden="true"><g transform="translate(20,0)">${balloonSVG('#ef3b3b').replace('<svg','<svg x="0" y="0" width="80" height="128"')}</g><g transform="translate(105,25)">${balloonSVG('#ffc928').replace('<svg','<svg x="0" y="0" width="80" height="128"')}</g><g transform="translate(190,8)">${balloonSVG('#3a8cf0').replace('<svg','<svg x="0" y="0" width="80" height="128"')}</g></svg>`;
+$('#art-candy').innerHTML = CANDY_SVG;
+$('#art-greet').innerHTML = HOUSES_SVG;
+btEl.innerHTML = `<img alt="" hidden>${BT_SVG}`;
+
+const imgOK = {};
+Object.entries(IMG).forEach(([k, src]) => { const im = new Image(); im.onload = () => { imgOK[k] = true; }; im.src = src; });
+
+function setTeacher(pose) {
+  const img = btEl.querySelector('img'), svg = btEl.querySelector('svg');
+  if (imgOK[pose]) { img.src = IMG[pose]; img.hidden = false; svg.style.display = 'none'; }
+  else { img.hidden = true; svg.style.display = ''; svg.setAttribute('class', 'bt-svg ' + pose); }
+}
+
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+
+/* =========================================================
+   진행 제어 (미션 중간에 나가면 안전하게 멈춤)
+   ========================================================= */
+class Abort extends Error {}
+let run = null;
+function alive(T) { if (!T.alive) throw new Abort(); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function sleep(T, ms) { await wait(ms); alive(T); }
+function waitHold(T, fn, hold, timeout) {
+  return new Promise((res, rej) => {
+    const t0 = performance.now(); let since = null;
+    const iv = setInterval(() => {
+      if (!T.alive) { clearInterval(iv); return rej(new Abort()); }
+      const now = performance.now();
+      if (fn()) { if (since === null) since = now; if (now - since >= hold) { clearInterval(iv); return res(true); } }
+      else since = null;
+      if (now - t0 >= timeout) { clearInterval(iv); res(false); }
+    }, 40);
+  });
+}
+
+/* =========================================================
+   기록
+   ========================================================= */
+let stats;
+const newStats = () => ({ exact: 0, similar: 0, other: 0, none: 0, skip: 0, motion: 0, motionMiss: 0, wrong: 0 });
+let lastHeard = '-';
+
+/* =========================================================
+   캐릭터 음성 (TTS)
+   ========================================================= */
+let voice = null;
+function pickVoice() {
+  try {
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => /en[-_]US/i.test(v.lang) && /Samantha|Google US English|Karen|Nicky|Aaron/i.test(v.name))
+      || vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  } catch (e) { voice = null; }
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+async function speak(text) {
+  if (!('speechSynthesis' in window)) { await wait(500 + text.length * 60); return; }
+  if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); await wait(80); }
+  await new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text.replace(/’/g, "'"));
+    u.lang = 'en-US'; if (voice) u.voice = voice; u.rate = CONFIG.ttsRate; u.pitch = 1.15;
+    let done = false; const fin = () => { if (done) return; done = true; clearTimeout(t); res(); };
+    u.onend = fin; u.onerror = fin;
+    const t = setTimeout(fin, 2000 + text.length * 120);
+    speechSynthesis.speak(u);
+  });
+}
+
+function placeBubble(anchor) {
+  const sr = sceneEl.getBoundingClientRect();
+  const a = (anchor || btEl).getBoundingClientRect();
+  bubbleEl.style.visibility = 'hidden'; bubbleEl.classList.add('on');
+  const bw = bubbleEl.offsetWidth, bh = bubbleEl.offsetHeight;
+  let x, y;
+  if (!anchor) { x = a.right - sr.left - a.width * 0.15; y = a.top - sr.top - bh * 0.25; }
+  else { x = a.left - sr.left + a.width / 2 - bw / 2; y = a.top - sr.top - bh - 8; }
+  x = Math.max(8, Math.min(sr.width - bw - 8, x));
+  y = Math.max(8, Math.min(sr.height - bh - 8, y));
+  bubbleEl.style.left = x + 'px'; bubbleEl.style.top = y + 'px'; bubbleEl.style.visibility = '';
+}
+function bubble(text, anchor) { bubbleEl.textContent = text; placeBubble(anchor); }
+function hideBubble() { bubbleEl.classList.remove('on'); }
+
+async function say(T, text, anchor) {
+  alive(T);
+  bubble(text, anchor);
+  if (!anchor) btEl.classList.add('talk');
+  await speak(text);
+  btEl.classList.remove('talk');
+  alive(T);
+}
+
+function fx(text, color) {
+  fxEl.textContent = text; fxEl.style.color = color || '';
+  fxEl.classList.remove('go'); void fxEl.offsetWidth; fxEl.classList.add('go');
+}
+function showWord(text, color) { wordEl.textContent = text; wordEl.style.color = color || '#23324d'; wordEl.classList.add('on'); }
+function hideWord() { wordEl.classList.remove('on'); }
+
+/* =========================================================
+   음성 인식
+   ========================================================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let activeListen = null;
+
+function micBadge(on) {
+  micEl.textContent = SR ? '🎤 말해 보세요' : '🎤 음성 인식이 안 되는 기기예요 · 통과 버튼을 눌러요';
+  micEl.classList.toggle('on', on);
+}
+
+function listen(key) {
+  return new Promise(res => {
+    const out = { texts: [], err: null };
+    let done = false, rec = null;
+    const fin = err => {
+      if (done) return; done = true;
+      if (err && !out.err) out.err = err;
+      clearTimeout(timer); activeListen = null; micBadge(false);
+      if (rec) { try { rec.abort(); } catch (e) {} }
+      res(out);
+    };
+    activeListen = { skip: () => fin('skip'), cancel: () => fin('cancel') };
+    micBadge(true);
+    const timer = setTimeout(() => fin('timeout'), SR ? CONFIG.listenMs : 3500);
+    if (!SR) return;
+    try {
+      rec = new SR();
+      rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 5;
+      rec.onresult = e => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          for (let j = 0; j < r.length; j++) {
+            const t = (r[j].transcript || '').trim();
+            if (t && !out.texts.includes(t)) out.texts.push(t);
+          }
+        }
+        if (out.texts.length) lastHeard = out.texts.join(' / ');
+        const c = classify(out.texts, key);
+        if (c === 'exact' || c === 'similar') fin();
+      };
+      rec.onerror = e => fin(e.error || 'error');
+      rec.onend = () => fin();
+      rec.start();
+    } catch (e) { fin('start-failed'); }
+  });
+}
+
+const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const hasWord = (t, w) => (' ' + norm(t) + ' ').includes(' ' + norm(w) + ' ');
+function classify(texts, key) {
+  const W = WORDS[key];
+  if (!texts.length) return 'none';
+  if (texts.some(t => W.exact.some(w => hasWord(t, w)))) return 'exact';
+  if (texts.some(t => W.similar.some(w => hasWord(t, w)))) return 'similar';
+  return texts.some(t => norm(t)) ? 'other' : 'none';
+}
+function passes(cat) {
+  if (cat === 'skip') return true;
+  const L = CONFIG.speechLevel;
+  if (L === 1) return cat !== 'none';
+  if (L === 2) return cat === 'exact' || cat === 'similar';
+  return cat === 'exact';
+}
+const RANK = { none: 0, other: 1, similar: 2, exact: 3 };
+
+/* 말하기 한 단계: 캐릭터가 말함 → 아이가 따라 말함 → 판정 (아이 화면은 늘 칭찬, 기록은 그대로) */
+async function speakStep(T, key, prompt, anchor) {
+  const W = WORDS[key];
+  showWord(W.card, W.color);
+  let best = 'none', line = prompt;
+  for (let a = 0; a < CONFIG.speechTries; a++) {
+    if (line) await say(T, line, anchor);
+    await wait(150);
+    const r = await listen(key);
+    alive(T);
+    if (!r.texts.length && r.err && r.err !== 'skip') lastHeard = `(${r.err})`;
+    const cat = r.err === 'skip' ? 'skip' : classify(r.texts, key);
+    if (cat !== 'skip' && RANK[cat] > RANK[best]) best = cat;
+    if (passes(cat)) {
+      stats[cat]++;
+      const word = { exact: 'Perfect!', similar: 'Good job!', other: 'Good!', skip: 'Okay!' }[cat];
+      fx(word);
+      await say(T, word);
+      hideWord();
+      return cat;
+    }
+    line = cat === 'none' ? `I can’t hear you. Say it louder! ${W.say}!` : `Almost! Say ${W.say}!`;
+  }
+  stats[best]++;
+  fx('👍');
+  await say(T, 'Great try!');
+  hideWord();
+  return best;
+}
+
+/* =========================================================
+   카메라 · 동작 인식 (MediaPipe Pose)
+   ========================================================= */
+const MP_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const P = { cam: 'off', model: 'off', seen: false, raised: false, armsOpen: false, wave: false, simUntil: 0 };
+const sim = () => performance.now() < P.simUntil;
+const isRaised = () => P.raised || sim();
+const isArmsOpen = () => P.armsOpen || sim();
+const isWave = () => P.wave || sim();
+let landmarker = null, lastVT = -1, lastL = null;
+const waveHist = [];
+
+async function startCamera() {
+  if (P.cam === 'on' || P.cam === 'starting') return;
+  P.cam = 'starting';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    P.cam = 'on';
+  } catch (e) { P.cam = 'fail'; return; }
+  initPose();
+}
+
+async function initPose() {
+  P.model = 'loading';
+  try {
+    const vision = await import(`${MP_URL}/vision_bundle.mjs`);
+    const files = await vision.FilesetResolver.forVisionTasks(`${MP_URL}/wasm`);
+    const opts = d => ({ baseOptions: { modelAssetPath: MODEL_URL, delegate: d }, runningMode: 'VIDEO', numPoses: 1,
+      minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+    try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts('GPU')); }
+    catch (e) { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts('CPU')); }
+    P.model = 'on';
+    requestAnimationFrame(poseLoop);
+  } catch (e) { P.model = 'fail'; }
+}
+
+function poseLoop() {
+  requestAnimationFrame(poseLoop);
+  if (!landmarker || video.readyState < 2) return;
+  const vt = video.currentTime;
+  if (vt === lastVT) return;
+  lastVT = vt;
+  let res;
+  try { res = landmarker.detectForVideo(video, performance.now()); } catch (e) { return; }
+  const L = res && res.landmarks && res.landmarks[0];
+  analyze(L);
+  lastL = L || null;
+  if (camEl.classList.contains('on')) drawPose(L);
+}
+
+function countRev(h, amp) {
+  if (h.length < 4) return 0;
+  let rev = 0, dir = 0, ext = h[0].x;
+  for (const p of h) {
+    if (dir === 0) { if (p.x - ext > amp) { dir = 1; ext = p.x; } else if (ext - p.x > amp) { dir = -1; ext = p.x; } }
+    else if (dir === 1) { if (p.x > ext) ext = p.x; else if (ext - p.x > amp) { rev++; dir = -1; ext = p.x; } }
+    else { if (p.x < ext) ext = p.x; else if (p.x - ext > amp) { rev++; dir = 1; ext = p.x; } }
+  }
+  return rev;
+}
+
+function analyze(L) {
+  const now = performance.now();
+  if (!L) { P.seen = P.raised = P.armsOpen = P.wave = false; waveHist.length = 0; return; }
+  P.seen = true;
+  const vis = i => (L[i].visibility ?? 1) > 0.4;
+  const sL = L[11], sR = L[12], wL = L[15], wR = L[16];
+  const sw = Math.max(0.001, Math.abs(sL.x - sR.x));
+  const upL = vis(15) && vis(11) && wL.y < sL.y - 0.03;
+  const upR = vis(16) && vis(12) && wR.y < sR.y - 0.03;
+  P.raised = upL || upR;
+  P.armsOpen = vis(11) && vis(12) && vis(15) && vis(16)
+    && Math.abs(wL.x - wR.x) > sw * 2.0
+    && wL.y < sL.y + sw * 1.2 && wR.y < sR.y + sw * 1.2;
+  if (P.raised) {
+    const w = (upL && upR) ? (wL.y < wR.y ? wL : wR) : (upL ? wL : wR);
+    waveHist.push({ t: now, x: w.x });
+  } else waveHist.length = 0;
+  while (waveHist.length && now - waveHist[0].t > 2000) waveHist.shift();
+  P.wave = P.raised && countRev(waveHist, Math.max(0.02, sw * 0.15)) >= 2;
+}
+
+function drawPose(L) {
+  const w = video.videoWidth || 640, h = video.videoHeight || 480;
+  if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
+  const g = canvas.getContext('2d');
+  g.clearRect(0, 0, w, h);
+  if (!L) return;
+  const lines = [[11,13],[13,15],[12,14],[14,16],[11,12],[11,23],[12,24],[23,24]];
+  g.lineWidth = 5; g.strokeStyle = '#7df0b5';
+  for (const [a, b] of lines) { g.beginPath(); g.moveTo(L[a].x * w, L[a].y * h); g.lineTo(L[b].x * w, L[b].y * h); g.stroke(); }
+  for (const i of [0, 11, 12, 15, 16]) {
+    g.fillStyle = (i === 15 || i === 16) && P.raised ? '#ffc93c' : '#ffffff';
+    g.beginPath(); g.arc(L[i].x * w, L[i].y * h, i > 14 ? 10 : 6, 0, Math.PI * 2); g.fill();
+  }
+}
+
+/* =========================================================
+   공통 화면 조작
+   ========================================================= */
+function setTries(i, total, label = '기회') { $('#chip-try').textContent = `${label} ${i}/${total}`; }
+function setMyColor(c) {
+  $('#chip-my').hidden = !c;
+  if (c) { $('#my-dot').style.background = COLORS[c].hex; $('#my-text').textContent = `내 색: ${COLORS[c].ko}`; }
+}
+function setTray(goal, got, kind, color) {
+  $('#tray-label').textContent = { balloon: '모은 풍선', candy: '받은 사탕', greet: '나눈 인사' }[kind] + ` ${got}/${goal}`;
+  const icon = kind === 'balloon' ? balloonSVG(COLORS[color].hex) : kind === 'candy' ? CANDY_SVG : '👋';
+  $('#slots').innerHTML = Array.from({ length: goal }, (_, i) => `<span class="slot${i < got ? ' full' : ''}">${i < got ? icon : ''}</span>`).join('');
+}
+function showOverlay(html) { overlayEl.innerHTML = html; overlayEl.classList.add('on'); }
+function hideOverlay() { overlayEl.classList.remove('on'); overlayEl.innerHTML = ''; }
+
+/* =========================================================
+   미션 01 · 풍선 모으기
+   ========================================================= */
+function makeSeq(my, others, nMine, nOther) {
+  const base = [...Array(nMine).fill(my), ...Array.from({ length: nOther }, (_, i) => others[i % others.length])];
+  let arr = base;
+  for (let k = 0; k < 60; k++) {
+    arr = [...base].sort(() => Math.random() - 0.5);
+    let ok = true;
+    for (let i = 2; i < arr.length; i++) if (arr[i] === arr[i - 1] && arr[i] === arr[i - 2]) ok = false;
+    if (ok) break;
+  }
+  return arr;
+}
+
+function chooseColor(T, colors) {
+  return new Promise((res, rej) => {
+    showOverlay(`<div class="ocard"><h3 class="en">Choose a color.</h3><div class="pick">${colors.map(c =>
+      `<button data-c="${c}">${balloonSVG(COLORS[c].hex)}<span>${COLORS[c].en}</span></button>`).join('')}</div></div>`);
+    const iv = setInterval(() => { if (!T.alive) { clearInterval(iv); rej(new Abort()); } }, 100);
+    overlayEl.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => {
+      clearInterval(iv); hideOverlay(); res(b.dataset.c);
+    }));
+  });
+}
+
+async function ensureHandsDown(T) {
+  if (isRaised()) {
+    await say(T, 'Hands down, please!');
+    await waitHold(T, () => !isRaised(), 200, 4000);
+  }
+}
+
+async function balloonMission(T) {
+  const L = CONFIG.balloon.levels[CONFIG.balloon.level];
+  const balloonEl = $('#balloon');
+  setTries(0, L.tries);
+  const pick = chooseColor(T, L.colors);
+  say(T, 'Choose a color.').catch(() => {});
+  const my = await pick;
+  setMyColor(my);
+  setTray(L.goal, 0, 'balloon', my);
+  fx(COLORS[my].en + '!', COLORS[my].hex);
+  await say(T, `${COLORS[my].en}! Let’s collect ${NUM[L.goal].toLowerCase()} ${COLORS[my].en.toLowerCase()} balloons.`);
+
+  setTeacher('raise');
+  await say(T, 'Try the movement. Raise your hand!');
+  let ok = await waitHold(T, isRaised, CONFIG.holdMs, 8000);
+  if (!ok) { await say(T, 'Raise your hand like me!'); ok = await waitHold(T, isRaised, CONFIG.holdMs, 8000); }
+  setTeacher('happy');
+  await say(T, ok ? 'Great! Ready, go!' : 'Okay! Ready, go!');
+  setTeacher('idle');
+
+  const others = L.colors.filter(c => c !== my);
+  const queue = makeSeq(my, others, L.goal, L.tries - L.goal);
+  let got = 0, turn = 0, extra = 0, total = queue.length;
+  while (queue.length && got < L.goal) {
+    const c = queue.shift(); turn++;
+    setTries(turn, total);
+    await ensureHandsDown(T);
+    balloonEl.className = 'balloon';
+    balloonEl.innerHTML = balloonSVG(COLORS[c].hex);
+    balloonEl.style.setProperty('--rise', L.riseSec + 's');
+    void balloonEl.offsetWidth;
+    balloonEl.classList.add('rise');
+    await say(T, `Who wants a ${COLORS[c].en.toLowerCase()} balloon?`);
+    const raised = await waitHold(T, isRaised, CONFIG.holdMs, L.showMs);
+    if (c === my) {
+      if (raised) {
+        got++; stats.motion++;
+        balloonEl.className = 'balloon got';
+        setTray(L.goal, got, 'balloon', my);
+        setTeacher('happy'); fx(NUM[got] + '!');
+        await say(T, NUM[got] + '!');
+        setTeacher('idle');
+      } else {
+        stats.motionMiss++;
+        balloonEl.className = 'balloon away';
+        await say(T, `Oops! That was ${COLORS[my].en.toLowerCase()}.`);
+        if (extra < 2) { queue.push(my); extra++; total++; setTries(turn, total); }
+      }
+    } else {
+      balloonEl.className = 'balloon away';
+      if (raised) { stats.wrong++; await say(T, `That’s ${COLORS[c].en.toLowerCase()}! Wait for ${COLORS[my].en.toLowerCase()}.`); }
+      else await say(T, 'Good waiting!');
+    }
+    await sleep(T, 700);
+    balloonEl.innerHTML = ''; balloonEl.className = 'balloon';
+  }
+
+  setTeacher('happy');
+  await say(T, got >= L.goal ? `${NUM[got]}! Great!` : `${NUM[got]}! Good job!`);
+  await say(T, 'Now let’s talk!');
+  setTeacher('idle');
+  await speakStep(T, my, `Say it with me! ${COLORS[my].en}!`);
+  await speakStep(T, 'one', 'Let’s count! One!');
+  await speakStep(T, 'two', 'Two!');
+  await speakStep(T, 'three', 'Three!');
+  await finish(T, got, L.goal);
+}
+
+/* =========================================================
+   미션 02 · 캔디 받기
+   ========================================================= */
+async function ensureArmsDown(T) {
+  if (isArmsOpen()) {
+    await say(T, 'Arms down, please!');
+    await waitHold(T, () => !isArmsOpen(), 200, 4000);
+  }
+}
+
+function dropCandy(T, sec) {
+  return new Promise((res, rej) => {
+    const c = $('#candy'), k = $('#kid');
+    const sr = sceneEl.getBoundingClientRect(), kr = k.getBoundingClientRect();
+    c.style.transition = ''; c.style.opacity = '1';
+    const ch = c.getBoundingClientRect().height;
+    const startY = -ch, endY = (kr.top - sr.top) + kr.height * 0.42 - ch / 2;
+    let t0 = null, since = null;
+    function step(now) {
+      if (!T.alive) return rej(new Abort());
+      if (t0 === null) t0 = now;
+      const p = Math.min(1, (now - t0) / (sec * 1000));
+      const y = startY + (endY - startY) * p;
+      c.style.transform = `translate(-50%, ${y}px) rotate(${p * 220}deg)`;
+      if (p > 0.6) {
+        if (isArmsOpen()) { if (since === null) since = now; if (now - since >= 150) {
+          k.classList.remove('open'); k.classList.add('hug');
+          c.style.transition = 'transform .25s ease-out';
+          c.style.transform = `translate(-50%, ${endY}px) rotate(0deg)`;
+          return res(true);
+        } } else since = null;
+      }
+      if (p < 1) return requestAnimationFrame(step);
+      c.style.transition = 'transform .8s ease-in, opacity .8s';
+      c.style.transform = `translate(-50%, ${sr.height}px) rotate(260deg)`;
+      c.style.opacity = '0';
+      setTimeout(() => res(false), 800);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+async function candyMission(T) {
+  const L = CONFIG.candy.levels[CONFIG.candy.level];
+  const kid = $('#kid'), candy = $('#candy');
+  setTries(0, L.tries);
+  setTray(L.goal, 0, 'candy');
+  await say(T, 'Let’s catch the candy!');
+  setTeacher('happy');
+  await say(T, 'Open your arms wide, like this!');
+  let ok = await waitHold(T, isArmsOpen, CONFIG.holdMs, 8000);
+  if (!ok) { await say(T, 'Open your arms!'); ok = await waitHold(T, isArmsOpen, CONFIG.holdMs, 8000); }
+  await say(T, ok ? 'Great! Ready, go!' : 'Okay! Ready, go!');
+  setTeacher('idle');
+
+  let got = 0;
+  for (let i = 1; i <= L.tries && got < L.goal; i++) {
+    setTries(i, L.tries);
+    await ensureArmsDown(T);
+    say(T, 'Here comes a candy!').catch(() => {});
+    const caught = await dropCandy(T, L.fallSec);
+    if (caught) {
+      got++; stats.motion++;
+      setTray(L.goal, got, 'candy');
+      setTeacher('happy'); fx(NUM[got] + '!');
+      await say(T, `Got it! ${NUM[got]}!`);
+    } else {
+      stats.motionMiss++;
+      await say(T, 'Oh no! Open your arms when it comes.');
+    }
+    setTeacher('idle');
+    await sleep(T, 500);
+    kid.classList.remove('hug');
+    candy.style.transition = ''; candy.style.opacity = '0'; candy.style.transform = 'translate(-50%,-100%)';
+  }
+
+  setTeacher('happy');
+  await say(T, got === 1 ? 'One candy! Good job!' : `${NUM[got]} candies! Great!`);
+  await say(T, 'Now let’s talk!');
+  setTeacher('idle');
+  await speakStep(T, 'candy', 'Say it with me! Candy!');
+  await speakStep(T, 'gotit', 'Got it!');
+  await speakStep(T, 'one', 'Let’s count! One!');
+  await speakStep(T, 'two', 'Two!');
+  await speakStep(T, 'three', 'Three!');
+  await finish(T, got, L.goal);
+}
+
+/* =========================================================
+   미션 03 · 인사하기
+   ========================================================= */
+function greetLayer() {
+  return `
+  <div class="bldg" style="left:27%;--roof:#e2725b;--wall:#ffe2b8">
+    <div class="roof"></div>
+    <div class="wall">
+      <div class="win" id="winA">
+        <div class="win-kid">${personSVG({ hair: 'pig', shirt: '#ffb3c7', hairColor: '#4a2f22' })}</div>
+        <div class="shutter l"></div><div class="shutter r"></div>
+      </div>
+      <div class="doorway" id="doorA">
+        <div class="person adult">${personSVG({ hair: 'short', shirt: '#f0a35a', pants: '#4a4a6a', hairColor: '#3a2a1e' })}</div>
+        <div class="door"></div>
+      </div>
+    </div>
+  </div>
+  <div class="bldg" style="left:63%;--roof:#6aa5d8;--wall:#fff0d6">
+    <div class="roof"></div>
+    <div class="wall">
+      <div class="win deco"></div>
+      <div class="doorway" id="doorB">
+        <div class="person child">${personSVG({ hair: 'bob', shirt: '#8fc3ff', hairColor: '#6b4630' })}</div>
+        <div class="door"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function showGreeter(T, s) {
+  if (s.from === 'door') {
+    const d = $('#door' + s.b); d.classList.add('open');
+    await sleep(T, 450);
+    const p = d.querySelector('.person'); p.classList.add('show');
+    await sleep(T, 550);
+    return { el: p, anchor: p };
+  }
+  const w = $('#win' + s.b); w.classList.add('open');
+  await sleep(T, 450);
+  w.classList.add('show');
+  await sleep(T, 650);
+  return { el: w.querySelector('.win-kid'), anchor: w };
+}
+async function hideGreeter(T, s, g) {
+  g.el.classList.remove('waving');
+  if (s.from === 'door') {
+    g.el.classList.remove('show'); await sleep(T, 400);
+    $('#door' + s.b).classList.remove('open');
+  } else {
+    const w = $('#win' + s.b); w.classList.remove('show'); await sleep(T, 450); w.classList.remove('open');
+  }
+  await sleep(T, 450);
+}
+
+async function greetMission(T) {
+  const steps = CONFIG.greet.steps;
+  setTries(0, steps.length, '인사');
+  setTray(steps.length, 0, 'greet');
+  await say(T, 'Let’s say hello to our friends!');
+  setTeacher('raise');
+  await say(T, 'Wave your hand like this!');
+  let ok = await waitHold(T, isWave, 0, 8000);
+  if (!ok) { await say(T, 'Raise your hand and wave!'); ok = await waitHold(T, isWave, 0, 8000); }
+  setTeacher('happy');
+  await say(T, ok ? 'Great waving!' : 'Okay! Let’s go!');
+  setTeacher('idle');
+
+  let done = 0;
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    setTries(i + 1, steps.length, '인사');
+    const g = await showGreeter(T, s);
+    g.el.classList.add('waving');
+    await say(T, s.line, g.anchor);
+    g.el.classList.remove('waving');
+    await say(T, `Your turn! Wave and say ${s.line}`);
+    let waved = false;
+    const iv = setInterval(() => { if (isWave()) waved = true; }, 50);
+    let cat;
+    try { cat = await speakStep(T, s.key, null); } finally { clearInterval(iv); }
+    if (!waved) { await say(T, 'Now wave your hand!'); waved = await waitHold(T, isWave, 0, 6000); }
+    if (waved) stats.motion++; else stats.motionMiss++;
+    if (waved || passes(cat)) { done++; setTray(steps.length, done, 'greet'); }
+    g.el.classList.add('waving');
+    fx(s.line);
+    await say(T, s.reply, g.anchor);
+    await hideGreeter(T, s, g);
+  }
+  setTeacher('happy');
+  await say(T, 'You said hello to everyone!');
+  await finish(T, done, steps.length);
+}
+
+/* =========================================================
+   완료 화면 · 미션 실행
+   ========================================================= */
+async function finish(T, got, goal) {
+  hideWord(); hideBubble(); setTeacher('happy');
+  const s = stats;
+  showOverlay(`<div class="ocard">
+    <h3>미션 완료!</h3>
+    <div class="stars">${Array.from({ length: goal }, (_, i) => starSVG(i < got)).join('')}</div>
+    <p class="stat">말하기 · 정확 ${s.exact} · 비슷한 소리 ${s.similar} · 다른 말 ${s.other} · 확인 불가 ${s.none}${s.skip ? ` · 통과 버튼 ${s.skip}` : ''}<br>
+    동작 · 성공 ${s.motion} · 놓침 ${s.motionMiss}${s.wrong ? ` · 다른 색에 손 ${s.wrong}` : ''}</p>
+    <div class="obtns"><button class="btn2" data-act="menu">미션 선택</button><button class="btn1" data-act="again">다시 하기</button></div>
+  </div>`);
+  await speak('Mission complete! Great job!');
+}
+
+const MISSIONS = {
+  balloon: { title: '01 풍선 모으기 · 1단계', fn: balloonMission, build: () => buntingSVG() + '<div class="balloon" id="balloon"></div>' },
+  candy:   { title: '02 캔디 받기 · 1단계',  fn: candyMission,   build: () => `<div class="kid" id="kid">${personSVG({ hair: 'bob', shirt: '#9fd4b9' })}</div><div class="candy" id="candy">${CANDY_SVG}</div>` },
+  greet:   { title: '03 인사하기 · 1단계',   fn: greetMission,   build: greetLayer }
+};
+let currentId = null;
+
+async function runMission(id) {
+  stopRun();
+  const T = { alive: true }; run = T; currentId = id;
+  stats = newStats(); lastHeard = '-';
+  show('s-game');
+  sceneEl.className = 'scene s-' + id;
+  layer.innerHTML = MISSIONS[id].build();
+  $('#g-title').textContent = MISSIONS[id].title;
+  hideBubble(); hideWord(); hideOverlay(); micBadge(false); setMyColor(null);
+  setTeacher('idle');
+  try { await MISSIONS[id].fn(T); }
+  catch (e) { if (!(e instanceof Abort)) { console.error(e); bubble('문제가 생겼어요. 미션 선택으로 돌아가 다시 시작해 주세요.'); } }
+}
+
+function stopRun() {
+  if (run) run.alive = false;
+  run = null;
+  if (activeListen) activeListen.cancel();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  btEl.classList.remove('talk');
+}
+
+function goMenu() { stopRun(); hideOverlay(); show('s-menu'); }
+
+/* =========================================================
+   버튼 · 키보드 · 테스트 패널
+   ========================================================= */
+$('#btn-start').addEventListener('click', () => {
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
+    pickVoice();
+  }
+  startCamera();
+  show('s-menu');
+});
+document.querySelectorAll('[data-mission]').forEach(b => b.addEventListener('click', () => runMission(b.dataset.mission)));
+$('#btn-home').addEventListener('click', goMenu);
+overlayEl.addEventListener('click', e => {
+  const act = e.target.closest('[data-act]');
+  if (!act) return;
+  if (act.dataset.act === 'menu') goMenu();
+  if (act.dataset.act === 'again') runMission(currentId);
+});
+$('#btn-debug').addEventListener('click', () => $('#debug').classList.toggle('on'));
+const simulate = () => { P.simUntil = performance.now() + 700; };
+const skipSpeech = () => { if (activeListen) activeListen.skip(); };
+$('#d-sim').addEventListener('click', simulate);
+$('#d-skip').addEventListener('click', skipSpeech);
+$('#d-cam').addEventListener('click', () => {
+  camEl.classList.toggle('on');
+  $('#d-cam').textContent = camEl.classList.contains('on') ? '📷 카메라 화면 숨기기' : '📷 카메라 화면 보기';
+});
+$('#d-level').addEventListener('change', e => { CONFIG.speechLevel = Number(e.target.value); });
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); simulate(); }
+  if (e.key === 's' || e.key === 'S') skipSpeech();
+});
+
+function camText() {
+  if (P.cam === 'fail') return '📷 카메라 없이 진행 (테스트 버튼 사용)';
+  if (P.model === 'on') return '📷 동작 인식 준비 완료';
+  if (P.model === 'fail') return '📷 동작 인식을 불러오지 못했어요';
+  return '📷 카메라 준비 중';
+}
+
+setInterval(() => {
+  $('#cam-chip').textContent = camText();
+  $('#d-status').textContent = camText().replace('📷 ', '');
+  $('#f-seen').classList.toggle('on', P.seen);
+  $('#f-raise').classList.toggle('on', isRaised());
+  $('#f-arms').classList.toggle('on', isArmsOpen());
+  $('#f-wave').classList.toggle('on', isWave());
+  $('#d-heard').textContent = lastHeard;
+  if (stats) $('#d-stats').textContent = `정확 ${stats.exact} · 비슷 ${stats.similar} · 다른 말 ${stats.other} · 확인 불가 ${stats.none} · 통과 ${stats.skip}`;
+  const kid = document.getElementById('kid');
+  if (kid && !kid.classList.contains('hug')) kid.classList.toggle('open', isArmsOpen());
+}, 80);
+</script>
+</body>
+</html>
