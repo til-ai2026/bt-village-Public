@@ -635,10 +635,11 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let activeListen = null;
 
 const CAN = { voice: false, buttonsOnly: false };
-function micBadge(on) {
-  micEl.textContent = CAN.voice ? '🎤 말해 보세요' : '🗣️ 소리 내어 말하고 버튼을 눌러요';
+// 음성 인식으로 듣는 중이면 마이크 표시만, 음성 인식을 못 쓸 때만 "말했어요" 버튼을 보여줌
+function micBadge(on, voice = CAN.voice) {
+  micEl.textContent = voice ? '🎤 말해 보세요' : '🗣️ 소리 내어 말하고 버튼을 눌러요';
   micEl.classList.toggle('on', on);
-  $('#say-btn').hidden = !(on && !CAN.voice);
+  $('#say-btn').hidden = !(on && !voice);
 }
 
 function listen(key) {
@@ -654,7 +655,14 @@ function listen(key) {
     };
     activeListen = { skip: () => fin('skip'), cancel: () => fin('cancel') };
     micBadge(true);
-    const timer = setTimeout(() => fin('timeout'), CAN.voice ? CONFIG.listenMs : 15000);
+    let timer = setTimeout(() => fin('timeout'), CAN.voice ? CONFIG.listenMs : 15000);
+    // 음성 인식이 거절되면 이번 단어부터 버튼으로 진행
+    const toButtons = () => {
+      CAN.voice = false;
+      if (rec) { rec.onresult = rec.onerror = rec.onend = null; try { rec.abort(); } catch (e) {} rec = null; }
+      clearTimeout(timer); timer = setTimeout(() => fin('timeout'), 15000);
+      micBadge(true);
+    };
     if (!CAN.voice) return;
     try {
       rec = new SR();
@@ -671,10 +679,13 @@ function listen(key) {
         const c = classify(out.texts, key);
         if (c === 'exact' || c === 'similar') fin();
       };
-      rec.onerror = e => fin(e.error || 'error');
+      rec.onerror = e => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toButtons();
+        else fin(e.error || 'error');
+      };
       rec.onend = () => fin();
       rec.start();
-    } catch (e) { fin('start-failed'); }
+    } catch (e) { toButtons(); }
   });
 }
 
@@ -768,7 +779,9 @@ async function requestPerms() {
   P.cam = result.cam ? 'on' : 'fail';
   if (result.cam && !landmarker && P.model !== 'loading') initPose();
   if (result.mic && SR) result.sr = await warmSR();
-  CAN.voice = result.mic && result.sr;
+  // 미리 켜보기가 실패해도(사파리는 터치 밖에서 거절될 때가 있음) 마이크가 있으면 음성 인식을 시도함.
+  // 실제로 듣다가 거절되면 그때 "말했어요" 버튼으로 바꿈.
+  CAN.voice = result.mic && !!SR;
   return result;
 }
 
@@ -1220,9 +1233,14 @@ async function runMission(id) {
   catch (e) { if (!(e instanceof Abort)) { console.error(e); bubble('문제가 생겼어요. 미션 선택으로 돌아가 다시 시작해 주세요.'); } }
 }
 
+// 효과 글자 초기화: 'go'가 남아 있으면 게임 화면이 다시 보일 때 애니메이션이 처음부터 재생돼
+// 이전 미션의 "Great effort!"가 시작하자마자 뜨는 문제가 있었음
+function resetFx() { fxEl.classList.remove('go'); fxEl.textContent = ''; hideSub(); }
+
 function stopRun() {
   if (run) run.alive = false;
   run = null;
+  resetFx();
   if (activeListen) activeListen.cancel();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   btEl.classList.remove('talk');
@@ -1265,7 +1283,7 @@ $('#perm-yes').addEventListener('click', async () => {
   CAN.buttonsOnly = false;
   const r = await requestPerms();
   b.disabled = false; b.textContent = '카메라·마이크 켜고 시작';
-  if (r.cam && r.mic && r.sr) show('s-menu'); else permResult(r);
+  if (r.cam && r.mic && (r.sr || CAN.voice)) show('s-menu'); else permResult(r);
 });
 $('#perm-no').addEventListener('click', () => {
   CAN.buttonsOnly = true; CAN.voice = false; P.cam = 'fail';
