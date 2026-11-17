@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>카메라 인식 점검 (1단계)</title>
+<script>window.T0 = performance.now();</script>
+<style>
+:root { --bg:#10151f; --panel:rgba(12,18,28,.82); --fg:#f4f7fb; --mute:#9fb0c6; --ok:#7df0b5; --warn:#ffc93c; --bad:#ff7a7a; --accent:#4da3ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif; overflow:hidden; touch-action:manipulation; -webkit-user-select:none; user-select:none; }
+button { font:inherit; border:0; border-radius:20px; cursor:pointer; }
+.big { min-height:72px; padding:16px 36px; font-size:26px; font-weight:800; background:var(--accent); color:#fff; }
+.big.alt { background:#2b3648; }
+.screen { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:24px; }
+.screen.on { display:flex; }
+.card { max-width:760px; width:100%; background:#18202d; border-radius:28px; padding:32px 36px; box-shadow:0 10px 40px rgba(0,0,0,.4); }
+.card h1 { margin:0 0 8px; font-size:34px; }
+.card h2 { margin:0 0 16px; font-size:28px; }
+.card p, .card li { font-size:20px; line-height:1.55; color:#dbe4f0; }
+.card ul { padding-left:22px; margin:10px 0 22px; }
+.privacy { background:#13301f; color:var(--ok); border-radius:16px; padding:14px 18px; font-weight:700; font-size:20px; }
+.row { display:flex; gap:14px; flex-wrap:wrap; margin-top:20px; }
+.hint { color:var(--mute); font-size:16px; }
+
+#stage { position:fixed; inset:0; display:none; background:#000; }
+#stage.on { display:block; }
+#video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transform:scaleX(-1); }
+#overlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+#status { position:absolute; left:10px; top:10px; background:var(--panel); border-radius:14px; padding:10px 14px; font:13px/1.5 ui-monospace,Menlo,monospace; max-width:46vw; pointer-events:auto; }
+#status b { color:var(--mute); font-weight:600; }
+#status .ok { color:var(--ok); } #status .warn { color:var(--warn); } #status .bad { color:var(--bad); }
+#status details summary { cursor:pointer; color:var(--mute); }
+#tools { position:absolute; right:10px; top:10px; display:flex; gap:8px; }
+#tools button { min-height:56px; min-width:56px; padding:0 18px; background:var(--panel); color:#fff; font-size:18px; font-weight:700; }
+
+#banner { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(.8); opacity:0; transition:transform .15s, opacity .15s; background:rgba(255,201,60,.95); color:#2a1d00; font-size:64px; font-weight:900; padding:18px 48px; border-radius:30px; pointer-events:none; white-space:nowrap; }
+#banner.on { opacity:1; transform:translate(-50%,-50%) scale(1); }
+#banner.manual { background:rgba(170,190,215,.95); color:#152030; }
+#guide { position:absolute; left:50%; top:16px; transform:translateX(-50%); background:rgba(255,122,122,.92); color:#fff; font-size:26px; font-weight:800; padding:10px 26px; border-radius:18px; display:none; }
+#guide.on { display:block; }
+
+#counts { position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; pointer-events:none; }
+.chip { background:var(--panel); border-radius:18px; padding:10px 18px; font-size:20px; font-weight:700; min-width:150px; text-align:center; transition:background .2s; }
+.chip span { display:block; font-size:30px; }
+.chip.flash { background:rgba(255,201,60,.9); color:#2a1d00; }
+
+#fail { position:absolute; left:50%; bottom:110px; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:10px; }
+#fail.on { display:flex; }
+#failWhy { background:var(--panel); color:var(--warn); font-size:20px; font-weight:700; padding:10px 20px; border-radius:14px; text-align:center; max-width:80vw; }
+#did { min-height:88px; min-width:220px; font-size:34px; font-weight:900; background:#ff9f43; color:#fff; border-radius:28px; }
+#retryCam { min-height:56px; padding:0 22px; background:#2b3648; color:#fff; font-size:18px; font-weight:700; }
+
+#settings { position:absolute; right:10px; top:76px; bottom:10px; width:min(420px,60vw); background:#18202d; border-radius:18px; padding:14px 18px; overflow:auto; display:none; -webkit-overflow-scrolling:touch; }
+#settings.on { display:block; }
+#settings h3 { margin:4px 0 10px; font-size:20px; }
+.set { margin:10px 0 14px; }
+.set label { display:flex; justify-content:space-between; font-size:15px; color:#dbe4f0; }
+.set label output { color:var(--warn); font-weight:700; }
+.set input[type=range] { width:100%; height:34px; }
+.set .sub { font-size:12px; color:var(--mute); }
+.seg { display:flex; gap:8px; }
+.seg button { flex:1; min-height:46px; background:#2b3648; color:#fff; font-weight:700; }
+.seg button.sel { background:var(--accent); }
+#portrait { position:fixed; left:0; right:0; bottom:0; background:#3a2b10; color:var(--warn); text-align:center; padding:8px; font-size:16px; display:none; z-index:9; }
+@media (orientation:portrait) { #portrait { display:block; } }
+</style>
+</head>
+<body>
+
+<!-- 1. 시작 -->
+<section class="screen on" id="s-start">
+  <div class="card">
+    <h1>카메라 인식 점검</h1>
+    <p>노리나루마을 1단계 시험 화면입니다. 몸 동작 인식만 확인합니다.</p>
+    <div class="privacy">카메라 영상은 이 기기 안에서만 쓰이고 저장되거나 전송되지 않습니다.</div>
+    <div class="row"><button class="big" id="btnStart">START</button></div>
+    <p class="hint" id="preload">동작 인식 준비 중…</p>
+  </div>
+</section>
+
+<!-- 2. 보호자 안내 -->
+<section class="screen" id="s-guide">
+  <div class="card">
+    <h2>보호자께 드리는 안내</h2>
+    <ul>
+      <li>다음 화면에서 <b>카메라 허용 팝업</b>이 뜨면 <b>보호자가 눌러 주세요.</b></li>
+      <li>카메라는 몸 동작(어깨·손목 위치)을 알아보는 데에만 씁니다.</li>
+      <li>카메라 영상은 이 기기 안에서만 쓰이고 저장되거나 전송되지 않습니다.</li>
+      <li>아이가 화면에서 <b>1.5~2m</b> 떨어져 <b>상체가 다 보이게</b> 서 주세요.</li>
+      <li><b>밝은 곳</b>에서 해 주세요. 뒤에서 빛이 들어오지 않게 해 주세요.</li>
+    </ul>
+    <div class="row">
+      <button class="big" id="btnCam">카메라 켜기</button>
+      <button class="big alt" id="btnNoCam">카메라 없이 진행</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3. 점검 화면 -->
+<section id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="overlay"></canvas>
+  <div id="guide"></div>
+  <div id="banner"></div>
+  <div id="status"></div>
+  <div id="tools">
+    <button id="btnDots">점 켜짐</button>
+    <button id="btnSet">⚙ 기준값</button>
+  </div>
+  <div id="fail">
+    <div id="failWhy"></div>
+    <button id="did">했어요</button>
+    <button id="retryCam" hidden>카메라 다시 켜기</button>
+  </div>
+  <div id="counts"></div>
+  <div id="settings"></div>
+</section>
+<div id="portrait">가로 화면으로 돌려 주세요</div>
+
+<script type="module">
+import { PoseEngine, DEFAULTS, fitRect } from '../lib/pose.js';
+
+const $ = s => document.querySelector(s);
+const T0 = window.T0;
+const KEY = 'bt-check-settings-v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+const saved = load();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ ...eng.s, dots, delegate: eng.delegate })); } catch (e) {} };
+
+const video = $('#video'), cv = $('#overlay'), g = cv.getContext('2d');
+const eng = new PoseEngine(video, saved);
+let dots = saved.dots ?? true;
+const T = { start: 0 };
+const NAMES = { raise: '손 들기', touch: '손 뻗어 터치', move: '좌우 이동', wave: '손 흔들기', manual: '했어요(버튼)' };
+const count = { raise: 0, touch: 0, move: 0, wave: 0, manual: 0 };
+let lastSeen = 0;
+
+/* 동작 인식은 첫 화면이 열리자마자 미리 불러옵니다 (카메라 영상과는 무관) */
+eng.loadModel(saved.delegate || 'GPU');
+
+/* ---------- 화면 흐름 ---------- */
+const show = id => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
+$('#btnStart').onclick = () => { T.start = performance.now(); show('s-guide'); };
+$('#btnCam').onclick = async () => { show(''); $('#stage').classList.add('on'); await eng.startCamera(); refresh(); };
+$('#btnNoCam').onclick = () => { show(''); $('#stage').classList.add('on'); eng.st.cam = 'fail'; eng.st.camError = '카메라 없이 진행 중입니다'; refresh(); };
+$('#retryCam').onclick = async () => { await eng.startCamera(); refresh(); };
+
+/* ---------- 손 뻗어 터치 목표 ---------- */
+let target = null;
+function newTarget() {
+  const side = Math.random() < .5 ? -1 : 1;
+  const bx = eng.bodyX ?? .5;
+  const x = Math.min(.88, Math.max(.12, bx + side * (.18 + Math.random() * .14)));
+  const y = .12 + Math.random() * .3;
+  target = { id: 't' + Date.now(), x, y };
+  eng.setTargets([target]);
+}
+newTarget();
+
+/* ---------- 신호 → 큰 표시 ---------- */
+let bannerT = 0;
+function banner(text, manual) {
+  const b = $('#banner'); b.textContent = text; b.classList.toggle('manual', !!manual); b.classList.add('on');
+  clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 1100);
+}
+function flash(type) {
+  const c = document.querySelector(`.chip[data-k="${type}"]`);
+  if (c) { c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 600); }
+}
+eng.addEventListener('signal', e => {
+  const d = e.detail;
+  count[d.type]++;
+  const extra = d.type === 'move' ? (d.dir === 'left' ? ' ←' : ' →') : '';
+  banner(NAMES[d.type] + extra);
+  flash(d.type);
+  if (d.type === 'touch') newTarget();
+  renderCounts();
+});
+$('#did').onclick = () => { count.manual++; banner('했어요 (버튼)', true); flash('manual'); renderCounts(); };
+
+function renderCounts() {
+  $('#counts').innerHTML = Object.keys(count).map(k =>
+    `<div class="chip" data-k="${k}">${NAMES[k]}<span>${count[k]}</span></div>`).join('');
+}
+renderCounts();
+
+/* ---------- 그리기 ---------- */
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return dpr;
+}
+function draw() {
+  requestAnimationFrame(draw);
+  if (!$('#stage').classList.contains('on')) return;
+  const dpr = resize();
+  g.clearRect(0, 0, cv.width, cv.height);
+  if (eng.st.cam !== 'on' || !video.videoWidth) return;
+  const R = fitRect(cv.width, cv.height, video.videoWidth, video.videoHeight, 'contain');
+  const P = p => [R.x + p.x * R.w, R.y + p.y * R.h];
+
+  // 터치 목표 (화면 높이 기준 반지름)
+  if (target) {
+    const [tx, ty] = P(target);
+    const r = eng.s.touchRadius * R.h;
+    g.fillStyle = 'rgba(77,163,255,.35)'; g.strokeStyle = '#4da3ff'; g.lineWidth = 4 * dpr;
+    g.beginPath(); g.arc(tx, ty, r, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.font = `700 ${16 * dpr}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('터치', tx, ty);
+  }
+  const L = eng.lm;
+  if (!dots || !L) return;
+  const ok = i => L[i].v >= eng.s.visMin;
+  g.lineWidth = 4 * dpr; g.strokeStyle = 'rgba(125,240,181,.8)';
+  for (const [a, b] of [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16]]) {
+    if (!ok(a) || !ok(b)) continue;
+    const [x1, y1] = P(L[a]), [x2, y2] = P(L[b]);
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+  }
+  for (const i of [11, 12, 15, 16]) {
+    const [x, y] = P(L[i]);
+    g.fillStyle = !ok(i) ? 'rgba(255,122,122,.7)' : (i >= 15 ? '#ffc93c' : '#ffffff');
+    g.beginPath(); g.arc(x, y, (i >= 15 ? 13 : 9) * dpr, 0, Math.PI * 2); g.fill();
+  }
+}
+requestAnimationFrame(draw);
+
+/* ---------- 상태 표시 ---------- */
+const sec = t => t ? ((t - T0) / 1000).toFixed(1) + '초' : '-';
+const cls = v => ({ on: 'ok', loading: 'warn', asking: 'warn', off: 'warn', fail: 'bad' }[v] || '');
+const CAM = { off: '꺼짐', asking: '허용 기다리는 중', on: '켜짐', fail: '사용 못 함' };
+const MOD = { off: '대기', loading: '불러오는 중', on: '준비됨', fail: '실패' };
+function refresh() {
+  const st = eng.st, t = st.t;
+  if (eng.lm) lastSeen = performance.now();
+  if (!$('#preload').hidden) $('#preload').textContent = st.model === 'on' ? `동작 인식 준비 완료 (${sec(t.modelReady)})` : st.model === 'fail' ? '동작 인식을 불러오지 못했습니다' : '동작 인식 준비 중…';
+  const startToPose = t.firstPose && T.start ? ((t.firstPose - T.start) / 1000).toFixed(1) + '초' : '-';
+  $('#status').innerHTML = `
+    <div><b>카메라</b> <span class="${cls(st.cam)}">${CAM[st.cam]}</span>${st.camError ? ` · ${st.camError}` : ''}</div>
+    <div><b>모델</b> <span class="${cls(st.model)}">${MOD[st.model]}</span>${st.delegate ? ` · ${st.delegate}` : ''}${st.modelSrc ? ` · ${st.modelSrc}` : ''}</div>
+    <div><b>인식된 사람</b> ${st.people}명 (최대 1명) · <b>fps</b> ${st.model === 'on' && st.cam === 'on' ? st.fps : '-'}</div>
+    <div><b>첫 화면→인식 시작</b> <span class="ok">${sec(t.firstPose)}</span> · START→ ${startToPose}</div>
+    <div><b>마지막 오류</b> <span class="${st.lastError ? 'bad' : ''}">${st.lastError || '없음'}</span></div>
+    <details><summary>자세히</summary>
+      <div>모델 준비 ${sec(t.modelReady)} (불러오기 ${t.modelReady ? ((t.modelReady - t.modelStart) / 1000).toFixed(1) + '초' : '-'}) · 카메라 켜짐 ${sec(t.camReady)}</div>
+      <div>영상 ${video.videoWidth}×${video.videoHeight} · readyState ${video.readyState} · 인식 프레임 ${st.frames} · 인식 오류 ${st.detectErrors}</div>
+      <div>WebGL2 ${hasGL2 ? '있음' : '없음'} · ${navigator.userAgent.replace(/^Mozilla\/5.0 /, '').slice(0, 90)}</div>
+      ${st.log.map(l => `<div class="bad">${l}</div>`).join('')}
+    </details>`;
+
+  // 안내 문구 (몸이 안 보일 때)
+  const gd = $('#guide');
+  const showGuide = st.cam === 'on' && st.model === 'on' && st.guide;
+  gd.textContent = st.guide; gd.classList.toggle('on', !!showGuide);
+
+  // 인식이 안 되면 자동 통과 없이 "했어요" 버튼과 이유
+  let why = '';
+  if (st.cam === 'fail') why = st.camError || '카메라를 쓸 수 없습니다';
+  else if (st.cam !== 'on') why = '카메라를 켜는 중입니다';
+  else if (st.model === 'fail') why = '동작 인식을 불러오지 못했습니다';
+  else if (st.model !== 'on') why = '동작 인식을 준비하는 중입니다';
+  else if (performance.now() - lastSeen > 3000) why = '사람이 인식되지 않습니다 · ' + (st.guide || '뒤로 물러나 주세요');
+  $('#fail').classList.toggle('on', !!why);
+  $('#failWhy').textContent = why ? `인식이 안 되고 있습니다: ${why}` : '';
+  $('#retryCam').hidden = st.cam !== 'fail';
+}
+const hasGL2 = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } })();
+setInterval(refresh, 250);
+eng.addEventListener('status', refresh);
+
+/* ---------- 점 표시 / 기준값 ---------- */
+const btnDots = $('#btnDots');
+const syncDots = () => { btnDots.textContent = dots ? '점 켜짐' : '점 꺼짐'; };
+btnDots.onclick = () => { dots = !dots; syncDots(); save(); };
+syncDots();
+$('#btnSet').onclick = () => $('#settings').classList.toggle('on');
+
+const SETS = [
+  ['손 들기', 'raiseRatio', '높이 (어깨너비 배수)', 0, 1.5, .05],
+  ['손 들기', 'raiseFrames', '연속 프레임', 1, 30, 1],
+  ['손 뻗어 터치', 'touchRadius', '목표 크기 (화면 높이 비율)', .03, .2, .01],
+  ['손 뻗어 터치', 'touchFrames', '목표 안 연속 프레임', 1, 10, 1],
+  ['좌우 이동', 'moveDist', '이동 거리 (화면 너비 비율)', .03, .3, .01],
+  ['좌우 이동', 'moveFrames', '연속 프레임', 1, 15, 1],
+  ['손 흔들기', 'waveAmp', '흔드는 폭 (어깨너비 배수)', .05, .8, .05],
+  ['손 흔들기', 'waveReversals', '방향 바뀐 횟수', 1, 5, 1],
+  ['손 흔들기', 'waveWindowMs', '시간 (ms)', 500, 3000, 100],
+  ['공통', 'visMin', '관절 신뢰도 최소값', .1, .9, .05],
+  ['공통', 'stableFrames', '사람이 보여야 하는 연속 프레임', 1, 20, 1],
+  ['공통', 'cooldownMs', '같은 판정 다시 내기까지 (ms)', 0, 3000, 100],
+];
+function renderSettings() {
+  $('#settings').innerHTML = `<h3>판정 기준값</h3>
+    <div class="set"><label>인식 방식 (GPU/CPU)</label>
+      <div class="seg">${['GPU', 'CPU'].map(d => `<button data-d="${d}" class="${eng.delegate === d ? 'sel' : ''}">${d}</button>`).join('')}</div>
+      <div class="sub">점이 안 보이면 CPU로 바꿔 보세요. 지금 실제 사용: ${eng.st.delegate || '-'}</div></div>
+    ${SETS.map(([grp, k, label, min, max, step]) => `
+      <div class="set"><label>${grp} · ${label}<output id="o-${k}">${eng.s[k]}</output></label>
+      <input type="range" data-k="${k}" min="${min}" max="${max}" step="${step}" value="${eng.s[k]}"></div>`).join('')}
+    <div class="row"><button class="big alt" id="btnReset" style="min-height:56px;font-size:18px">시작값으로 되돌리기</button></div>`;
+  $('#settings').querySelectorAll('input[type=range]').forEach(inp => {
+    inp.oninput = () => { const k = inp.dataset.k; eng.set({ [k]: +inp.value }); $('#o-' + k).textContent = inp.value; save(); };
+  });
+  $('#settings').querySelectorAll('.seg button').forEach(b => {
+    b.onclick = async () => { await eng.loadModel(b.dataset.d); save(); renderSettings(); };
+  });
+  $('#btnReset').onclick = () => { eng.set({ ...DEFAULTS }); save(); renderSettings(); };
+}
+renderSettings();
+</script>
+</body>
+</html>
