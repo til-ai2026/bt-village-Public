@@ -5,7 +5,7 @@
    - 클리어 수와 기록은 이 기기 안(localStorage)에만 저장합니다.
    ========================================================= */
 import { PoseEngine, fitRect } from '../lib/pose.js';
-import { MISSIONS, REST, createMission } from '../lib/missions.js';
+import { MISSIONS, createMission } from '../lib/missions.js';
 import { loadProgress, saveProgress, resetProgress, missionRec, CLEAR_GOAL } from '../lib/progress.js';
 
 const $ = s => document.querySelector(s);
@@ -19,7 +19,7 @@ const video = $('#mVideo'), cv = $('#mCanvas'), g = cv.getContext('2d');
 const bus = new EventTarget();
 let eng = null, camWanted = null, lane = null;
 let prog = loadProgress();
-let onExit = null, cur = null, curM = null, rec = null, phase = 'off', moveStart = 0, dots = false;
+let onExit = null, cur = null, curM = null, rec = null, phase = 'off', dots = false;
 
 /* ---------- 동작 인식 → 신호 ---------- */
 export function preload() {
@@ -104,7 +104,6 @@ function startMission(m) {
   bar($('#mBar'));
   show('s-mission');
   phase = 'action';
-  moveStart = performance.now();
   cur.start();
   last = performance.now();
   requestAnimationFrame(loop);
@@ -141,7 +140,6 @@ function loop(now) {
   if (!eng || eng.st.cam !== 'on') { g.fillStyle = '#26324a'; g.fillRect(R.x, R.y, R.w, R.h); }
   cur.draw(g, R);
   if (dots && eng && eng.lm) drawDots(R);
-  if (now - moveStart > REST.maxMoveMs) { tooLong(); return; }
   status();
 }
 function drawDots(R) {
@@ -176,14 +174,7 @@ function stats() {
     (st ? `<br>카메라 ${st.cam} · 모델 ${st.model}${st.delegate ? '(' + st.delegate + ')' : ''} · 사람 ${st.people} · 인식 ${st.fps}fps` : '');
 }
 
-/* ---------- 3분이 넘으면 쉬기 ---------- */
-async function tooLong() {
-  phase = 'rest';
-  if (eng) eng.setTargets([]);
-  await rest();
-}
-
-/* ---------- 말하기 → 완료 → 쉬기 ---------- */
+/* ---------- 말하기 → 완료 → 미션 선택 ---------- */
 async function afterAction(result) {
   if (phase !== 'action') return;
   phase = 'words';
@@ -206,7 +197,7 @@ async function afterAction(result) {
   bar($('#doneBar'));
   $('#doneUnlock').hidden = prog.total < CLEAR_GOAL;
   await sleep(3000);
-  await rest();
+  if (phase === 'done') renderSelect();
 }
 
 function speak(word) {
@@ -225,18 +216,4 @@ function speak(word) {
     } catch (e) { fin(); }
     setTimeout(fin, 3500);
   });
-}
-
-let restSkip = false;
-$('#btnRestSkip').onclick = () => { restSkip = true; };
-async function rest() {
-  phase = 'rest';
-  show('s-rest');
-  restSkip = false;
-  const end = performance.now() + REST.restMs;
-  while (!restSkip && performance.now() < end) {
-    $('#restSec').textContent = Math.ceil((end - performance.now()) / 1000);
-    await sleep(200);
-  }
-  renderSelect();
 }

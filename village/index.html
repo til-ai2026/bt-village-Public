@@ -73,7 +73,7 @@ h1 { margin:0; font-size:52px; } h2 { margin:0; font-size:38px; }
 #btnDid { min-height:84px; min-width:180px; font-size:32px; font-weight:900; background:#ff9f43; color:#fff; border-radius:26px; }
 #mStats { left:12px; bottom:14px; background:var(--panel); border-radius:12px; padding:6px 10px; font:12px/1.5 ui-monospace,Menlo,monospace; pointer-events:none; max-width:36vw; }
 
-/* 말하기 · 완료 · 쉬기 */
+/* 말하기 · 완료 */
 #s-words { background:#fffbe8; color:var(--ink); }
 #wordText { font-size:min(150px,18vw); font-weight:900; }
 #wordText.pop { animation:pop .35s ease-out; }
@@ -81,8 +81,6 @@ h1 { margin:0; font-size:52px; } h2 { margin:0; font-size:38px; }
 #s-words .ear { font-size:48px; }
 #s-done { background:#fff1f6; color:var(--ink); }
 #s-done h2 { font-size:72px; color:#e84a5f; }
-#s-rest { background:#e9f6ff; color:var(--ink); }
-#restSec { font-size:120px; font-weight:900; color:#3c8dff; }
 
 #status { position:fixed; left:10px; bottom:10px; z-index:4; pointer-events:none; background:var(--panel); border-radius:14px; padding:8px 12px; font:13px/1.5 ui-monospace,Menlo,monospace; display:none; max-width:48vw; }
 #status.on { display:block; }
@@ -163,12 +161,6 @@ h1 { margin:0; font-size:52px; } h2 { margin:0; font-size:38px; }
   <h2>완료!</h2>
   <div class="pbar" id="doneBar"><div class="bar"><i></i></div><span></span></div>
   <div class="unlock" id="doneUnlock" hidden>다음 건물이 열렸어요</div>
-</section>
-
-<section class="screen" id="s-rest">
-  <h2>쉬는 시간</h2>
-  <div id="restSec">30</div>
-  <button class="small" id="btnRestSkip">보호자: 건너뛰기</button>
 </section>
 
 <div id="status"></div>
