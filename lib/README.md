@@ -5,3 +5,4 @@
 - `models/pose_landmarker_lite.task` — MediaPipe Pose Landmarker (lite, float16 v1), Apache License 2.0, © Google LLC
 
 외부 주소 없이 동작하도록 저장소에 넣었습니다. 불러오기에 실패하면 같은 버전의 CDN으로 한 번 더 시도합니다.
+- `three/three.module.min.js` — [three.js](https://threejs.org) r160, MIT License (`three/LICENSE`)
