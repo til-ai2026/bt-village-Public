@@ -4,31 +4,85 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>노리나루마을 (2단계)</title>
+<title>노리나루마을 (3단계)</title>
 <script>window.T0 = performance.now();</script>
+<script type="importmap">{ "imports": { "three": "../lib/three/three.module.min.js" } }</script>
 <style>
-:root { --panel:rgba(12,18,28,.78); --fg:#f4f7fb; --mute:#9fb0c6; --ok:#7df0b5; --warn:#ffc93c; --bad:#ff7a7a; --accent:#ff8a3d; }
+:root { --panel:rgba(12,18,28,.78); --fg:#f4f7fb; --mute:#9fb0c6; --ok:#7df0b5; --warn:#ffc93c; --bad:#ff7a7a; --accent:#ff8a3d; --ink:#173049; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html,body { margin:0; height:100%; background:#bfe6ff; color:var(--fg); font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif; overflow:hidden; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 button { font:inherit; border:0; border-radius:24px; cursor:pointer; }
+button:disabled { opacity:.5; }
 #c { position:fixed; inset:0; width:100%; height:100%; display:block; }
-.screen { position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:22px; padding:24px; z-index:5; }
+.screen { position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:24px; z-index:5; }
 .screen.on { display:flex; }
-#s-start { background:linear-gradient(#8fd3ff,#d9f3ff); color:#173049; }
-#s-start h1 { margin:0; font-size:52px; }
-#s-start p { margin:0; font-size:20px; color:#355a7a; }
+.light { background:linear-gradient(#8fd3ff,#d9f3ff); color:var(--ink); }
 .big { min-height:88px; min-width:260px; padding:16px 44px; font-size:36px; font-weight:900; background:var(--accent); color:#fff; box-shadow:0 8px 0 #c95f1c; }
 .big:active { transform:translateY(4px); box-shadow:0 4px 0 #c95f1c; }
-#s-load { background:linear-gradient(#8fd3ff,#d9f3ff); color:#173049; }
-#s-load h2 { margin:0; font-size:36px; }
+.mid { min-height:72px; padding:0 34px; font-size:26px; font-weight:800; background:#3c8dff; color:#fff; }
+.mid.alt { background:#fff; color:var(--ink); }
+.small { min-height:48px; padding:0 18px; font-size:16px; font-weight:700; background:rgba(255,255,255,.7); color:var(--ink); }
+h1 { margin:0; font-size:52px; } h2 { margin:0; font-size:38px; }
+.privacy { background:#e3f7ea; color:#1d6b3c; border-radius:16px; padding:12px 18px; font-weight:700; font-size:19px; text-align:center; }
+
+#s-start p { margin:0; font-size:20px; color:#355a7a; }
 .bar { width:min(520px,70vw); height:26px; background:#fff; border-radius:13px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,.15); }
-.bar i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
+.bar i { display:block; height:100%; width:0; background:var(--accent); transition:width .3s; }
 #loadMsg { font-size:18px; color:#355a7a; }
-#skip { min-height:64px; padding:0 32px; font-size:24px; font-weight:800; background:#fff; color:#173049; }
-#s-select { background:#fff7ec; color:#3a2410; z-index:6; }
-#s-select h2 { margin:0; font-size:44px; }
-#s-select p { margin:0; font-size:20px; color:#8a6a4a; }
-#back { min-height:72px; padding:0 36px; font-size:26px; font-weight:800; background:#3c8dff; color:#fff; }
+#skip { min-height:64px; padding:0 32px; font-size:24px; font-weight:800; background:#fff; color:var(--ink); }
+
+/* 보호자 안내 */
+#s-camguide .card { max-width:760px; background:#fff; border-radius:28px; padding:28px 34px; color:var(--ink); }
+#s-camguide li { font-size:20px; line-height:1.55; }
+.row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+
+/* 미션 선택 */
+#s-select { background:#fff7ec; color:#3a2410; justify-content:flex-start; padding-top:28px; overflow:auto; }
+.pbar { display:flex; align-items:center; gap:14px; }
+.pbar .bar { width:min(420px,50vw); }
+.pbar span { font-size:22px; font-weight:800; color:#8a4b12; }
+.unlock { font-size:26px; font-weight:900; color:#d9480f; background:#fff0d6; padding:8px 22px; border-radius:16px; }
+#missionList { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
+.mcard { width:min(290px,29vw); min-height:230px; background:#fff; border-radius:26px; box-shadow:0 6px 0 #e6c9a3; padding:16px; color:#3a2410; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.mcard:active { transform:translateY(3px); box-shadow:0 3px 0 #e6c9a3; }
+.micon { font-size:64px; line-height:1; }
+.mtitle { font-size:26px; font-weight:900; }
+.mhow { font-size:16px; color:#8a6a4a; }
+.mlv { font-size:18px; font-weight:800; color:#fff; background:var(--accent); border-radius:12px; padding:2px 12px; }
+.mstat { font-size:13px; color:#a08a70; }
+#selCam { font-size:14px; color:#a08a70; }
+
+/* 미션 화면 */
+#s-mission { background:#000; padding:0; }
+#mVideo { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transform:scaleX(-1); }
+#mCanvas { position:absolute; inset:0; width:100%; height:100%; }
+.hud { position:absolute; z-index:2; }
+#mTop { left:0; right:0; top:10px; display:flex; justify-content:center; pointer-events:none; }
+#mTopBox { background:var(--panel); border-radius:18px; padding:8px 20px; text-align:center; }
+#mTitle { font-size:22px; font-weight:900; }
+#mHow { font-size:16px; color:#dbe4f0; }
+#mGoal { position:absolute; right:12px; top:10px; z-index:2; background:var(--panel); border-radius:18px; padding:6px 18px; font-size:34px; font-weight:900; }
+#btnQuit { left:12px; top:10px; min-height:56px; padding:0 20px; background:var(--panel); color:#fff; font-size:18px; font-weight:800; }
+#btnDots { left:12px; top:74px; min-height:44px; padding:0 14px; background:var(--panel); color:#fff; font-size:14px; font-weight:700; }
+#mBar { right:12px; top:76px; display:flex; align-items:center; gap:10px; background:var(--panel); padding:8px 14px; border-radius:16px; pointer-events:none; }
+#mBar .bar { width:min(180px,18vw); height:16px; }
+#mBar span { font-size:15px; font-weight:800; color:#fff; }
+#mGuide { left:50%; top:96px; transform:translateX(-50%); background:rgba(255,122,122,.92); font-size:24px; font-weight:800; padding:8px 22px; border-radius:16px; pointer-events:none; }
+#mDidBox { right:14px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+#mWhy { background:var(--panel); color:var(--warn); font-size:15px; font-weight:700; padding:6px 12px; border-radius:12px; max-width:34vw; text-align:right; }
+#btnDid { min-height:84px; min-width:180px; font-size:32px; font-weight:900; background:#ff9f43; color:#fff; border-radius:26px; }
+#mStats { left:12px; bottom:14px; background:var(--panel); border-radius:12px; padding:6px 10px; font:12px/1.5 ui-monospace,Menlo,monospace; pointer-events:none; max-width:36vw; }
+
+/* 말하기 · 완료 · 쉬기 */
+#s-words { background:#fffbe8; color:var(--ink); }
+#wordText { font-size:min(150px,18vw); font-weight:900; }
+#wordText.pop { animation:pop .35s ease-out; }
+@keyframes pop { from { transform:scale(.6); opacity:.2; } to { transform:scale(1); opacity:1; } }
+#s-words .ear { font-size:48px; }
+#s-done { background:#fff1f6; color:var(--ink); }
+#s-done h2 { font-size:72px; color:#e84a5f; }
+#s-rest { background:#e9f6ff; color:var(--ink); }
+#restSec { font-size:120px; font-weight:900; color:#3c8dff; }
 
 #status { position:fixed; left:10px; bottom:10px; z-index:4; pointer-events:none; background:var(--panel); border-radius:14px; padding:8px 12px; font:13px/1.5 ui-monospace,Menlo,monospace; display:none; max-width:48vw; }
 #status.on { display:block; }
@@ -41,29 +95,87 @@ button { font:inherit; border:0; border-radius:24px; cursor:pointer; }
 <body>
 <canvas id="c"></canvas>
 
-<section class="screen on" id="s-start">
+<section class="screen on light" id="s-start">
   <h1>노리나루마을</h1>
+  <div class="privacy">카메라 영상은 이 기기 안에서만 쓰이고 저장되거나 전송되지 않습니다.</div>
   <p>START를 누르면 소리가 켜집니다</p>
   <button class="big" id="btnStart">START</button>
 </section>
 
-<section class="screen" id="s-load">
+<section class="screen light" id="s-load">
   <h2>마을로 가는 중…</h2>
   <div class="bar"><i id="barFill"></i></div>
   <div id="loadMsg">준비 중</div>
   <button id="skip">건너뛰기</button>
 </section>
 
+<!-- 활동놀이: 보호자 안내 -->
+<section class="screen light" id="s-camguide">
+  <div class="card">
+    <h2>보호자께 드리는 안내</h2>
+    <ul>
+      <li>다음에 <b>카메라 허용 팝업</b>이 뜨면 <b>보호자가 눌러 주세요.</b></li>
+      <li>카메라는 몸 동작(어깨·손목 위치)을 알아보는 데에만 씁니다.</li>
+      <li>카메라 영상은 이 기기 안에서만 쓰이고 저장되거나 전송되지 않습니다.</li>
+      <li>아이가 화면에서 <b>1.5~2m</b> 떨어져 <b>상체가 다 보이게</b> 서 주세요.</li>
+      <li><b>밝은 곳</b>에서 해 주세요.</li>
+    </ul>
+    <div class="row">
+      <button class="mid" id="btnCamOn">카메라 켜기</button>
+      <button class="mid alt" id="btnCamOff">카메라 없이 하기</button>
+    </div>
+  </div>
+</section>
+
+<!-- 활동놀이: 미션 선택 -->
 <section class="screen" id="s-select">
   <h2>활동놀이</h2>
-  <p>미션 선택 (3단계에서 채웁니다)</p>
-  <button id="back">마을로 돌아가기</button>
+  <div class="pbar" id="selBar"><div class="bar"><i></i></div><span></span></div>
+  <div class="unlock" id="selUnlock" hidden>다음 건물이 열렸어요</div>
+  <div id="missionList"></div>
+  <div class="row">
+    <button class="mid" id="btnToVillage">마을로 돌아가기</button>
+    <button class="small" id="btnReset">기록 지우기</button>
+  </div>
+  <div id="selCam"></div>
+</section>
+
+<!-- 활동놀이: 미션 -->
+<section class="screen" id="s-mission">
+  <video id="mVideo" playsinline muted autoplay></video>
+  <canvas id="mCanvas"></canvas>
+  <div class="hud" id="mTop"><div id="mTopBox"><div id="mTitle"></div><div id="mHow"></div></div></div>
+  <div id="mGoal"></div>
+  <button class="hud" id="btnQuit">그만하기</button>
+  <button class="hud" id="btnDots">점 꺼짐</button>
+  <div class="hud" id="mGuide" hidden></div>
+  <div class="hud pbar" id="mBar"><div class="bar"><i></i></div><span></span></div>
+  <div class="hud" id="mStats"></div>
+  <div class="hud" id="mDidBox"><div id="mWhy" hidden></div><button id="btnDid">했어요</button></div>
+</section>
+
+<section class="screen" id="s-words">
+  <div class="ear">🔊</div>
+  <div id="wordText"></div>
+</section>
+
+<section class="screen" id="s-done">
+  <h2>완료!</h2>
+  <div class="pbar" id="doneBar"><div class="bar"><i></i></div><span></span></div>
+  <div class="unlock" id="doneUnlock" hidden>다음 건물이 열렸어요</div>
+</section>
+
+<section class="screen" id="s-rest">
+  <h2>쉬는 시간</h2>
+  <div id="restSec">30</div>
+  <button class="small" id="btnRestSkip">보호자: 건너뛰기</button>
 </section>
 
 <div id="status"></div>
 <div id="portrait">가로 화면으로 돌려 주세요</div>
 
 <script type="module">
+import * as Assets from '../lib/village-assets.js';
 const $ = s => document.querySelector(s);
 const T0 = window.T0;
 const T = { start: 0, three: 0, scene: 0, ready: 0 };
@@ -72,7 +184,7 @@ const DPR = Math.min(window.devicePixelRatio || 1, +(q.get('dpr') || 1.5));
 
 /* Three.js는 첫 화면이 열리자마자 미리 불러옵니다 */
 let THREE;
-const threeP = import('../lib/three/three.module.min.js').then(m => { THREE = m; T.three = performance.now(); return m; });
+const threeP = import('three').then(m => { THREE = m; T.three = performance.now(); return m; });
 
 /* ---------- START: 소리 켜기 (Safari는 터치 안에서만 허용) ---------- */
 let audio = null;
@@ -84,6 +196,9 @@ function unlockAudio() {
     s.buffer = b; s.connect(audio.destination); s.start(0);
     audio.resume();
   } catch (e) { audio = null; }
+  try { // 음성 합성도 터치 안에서 한 번 켜 둡니다
+    const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
+  } catch (e) {}
 }
 
 const show = id => document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
@@ -100,8 +215,7 @@ async function boot() {
     prog(15, '3D 엔진 불러오는 중');
     await threeP;
     prog(50, '마을 만드는 중');
-    await wait(16);
-    build();
+    await build();
     T.scene = performance.now();
     prog(80, '그리는 중');
     await wait(16);
@@ -114,12 +228,16 @@ async function boot() {
     T.ready = performance.now();
     loop.last = performance.now();
     requestAnimationFrame(frame);
+    // 마을이 뜬 뒤 활동놀이(동작 인식)를 미리 불러옵니다
+    setTimeout(() => activityP().then(a => a.preload()), 1000);
   } catch (e) {
     prog(0, '마을을 불러오지 못했습니다: ' + (e && e.message || e));
   }
 }
+let actMod = null;
+const activityP = () => actMod || (actMod = import('./activity.js'));
 
-/* ---------- 장면 ---------- */
+/* ---------- 장면 (모양은 lib/village-assets.js에서 바꿉니다) ---------- */
 let renderer, scene, camera, player, npc, ground, marker, starMark;
 const buildings = [];
 const colliders = [];
@@ -130,22 +248,13 @@ const BLD = [
   { id: 'music',    name: '음악',     open: false, pos: [-11, 3],  size: [5, 3.6, 4.5], body: 0xf7c6e0, roof: 0xb05a8c },
   { id: 'video',    name: '내 영상',  open: false, pos: [11, 3],   size: [5, 3.6, 4.5], body: 0xfff1a8, roof: 0xc9a227 },
 ];
+const TREES = (() => {
+  const t = [];
+  for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2 + (i % 2) * .1, r = 19 + (i * 37 % 7); t.push([Math.cos(a) * r, Math.sin(a) * r]); }
+  return t.concat([[-5, -15], [5, -15], [-17, -1], [17, -1]]);
+})();
 
-function label(text, { bg = 'rgba(255,255,255,.95)', fg = '#173049', w = 3.6 } = {}) {
-  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 112;
-  const g = cv.getContext('2d');
-  g.fillStyle = bg; roundRect(g, 4, 4, 312, 104, 40); g.fill();
-  g.fillStyle = fg; g.font = '800 54px -apple-system,"Apple SD Gothic Neo",sans-serif';
-  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 160, 60);
-  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  sp.scale.set(w, w * 112 / 320, 1); sp.renderOrder = 10;
-  return sp;
-}
-function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-const lam = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, flatShading: true, ...o });
-
-function build() {
+async function build() {
   renderer = new THREE.WebGLRenderer({ canvas: $('#c'), antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(DPR);
   renderer.setSize(innerWidth, innerHeight, false);
@@ -153,95 +262,55 @@ function build() {
   scene.background = new THREE.Color(0xbfe6ff);
   scene.fog = new THREE.Fog(0xbfe6ff, 40, 70);
   camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 120);
-
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6fae5a, 1.6));
   const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(8, 20, 10); scene.add(sun);
 
-  // 땅, 광장, 길
-  ground = new THREE.Mesh(new THREE.CircleGeometry(30, 40), lam(0x8fd16a));
-  ground.rotation.x = -Math.PI / 2; ground.userData.kind = 'ground'; scene.add(ground);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(5.5, 32), lam(0xf3e2b8));
-  plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.01; scene.add(plaza);
-  const pathMat = lam(0xf3e2b8);
+  const G = Assets.createGround(THREE);
+  ground = G.ground; ground.userData.kind = 'ground';
+  scene.add(G.ground, G.plaza);
 
-  // 건물
   for (const d of BLD) {
-    const [w, h, dep] = d.size;
     const grp = new THREE.Group();
     grp.position.set(d.pos[0], 0, d.pos[1]);
     grp.lookAt(0, 0, 0);
-    const bodyC = d.open ? d.body : 0xc3c7cc, roofC = d.open ? d.roof : 0x8d939b;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, dep), lam(bodyC)); body.position.y = h / 2;
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, dep) * 0.78, 2.4, 4), lam(roofC));
-    roof.position.y = h + 1.2; roof.rotation.y = Math.PI / 4; roof.scale.z = dep / w;
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.2), lam(d.open ? 0x7a4a2a : 0x6c7178));
-    door.position.set(0, 1.1, dep / 2 + 0.05);
-    grp.add(body, roof, door);
-    const tag = label(d.open ? d.name : '🔒 ' + d.name, d.open ? {} : { bg: 'rgba(80,88,100,.92)', fg: '#e8edf3' });
-    tag.position.set(0, h + 3.2, 0); grp.add(tag);
+    grp.add(await Assets.createBuilding(THREE, d));
+    const tag = Assets.createLabel(THREE, d.open ? d.name : '🔒 ' + d.name, d.open ? {} : { bg: 'rgba(80,88,100,.92)', fg: '#e8edf3' });
+    tag.position.set(0, d.size[1] + 3.2, 0); grp.add(tag);
     scene.add(grp);
     const dir = new THREE.Vector3(-d.pos[0], 0, -d.pos[1]).normalize();
-    const doorPt = new THREE.Vector3(d.pos[0], 0, d.pos[1]).addScaledVector(dir, dep / 2 + 1.3);
+    const doorPt = new THREE.Vector3(d.pos[0], 0, d.pos[1]).addScaledVector(dir, d.size[2] / 2 + 1.3);
     const b = { ...d, grp, tag, doorPt, armed: true };
     grp.traverse(o => { if (o.isMesh) o.userData.building = b; });
     buildings.push(b);
-    colliders.push({ x: d.pos[0], z: d.pos[1], r: Math.max(w, dep) * 0.55 });
+    colliders.push({ x: d.pos[0], z: d.pos[1], r: Math.max(d.size[0], d.size[2]) * 0.55 });
     // 광장에서 문까지 길
     const len = doorPt.length() - 5;
     const pathGrp = new THREE.Group();
     pathGrp.rotation.y = Math.atan2(-dir.x, -dir.z);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(2, len), pathMat);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(2, len), G.pathMaterial);
     path.rotation.x = -Math.PI / 2; path.position.set(0, 0.005, 5 + len / 2);
     pathGrp.add(path); scene.add(pathGrp);
   }
 
   // 열린 건물 표시 (위아래로 움직이는 별)
   const act = buildings[0];
-  starMark = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), lam(0xffe14d, { emissive: 0x665500 }));
+  starMark = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), new THREE.MeshLambertMaterial({ color: 0xffe14d, emissive: 0x665500, flatShading: true }));
   starMark.position.set(act.pos[0], act.size[1] + 5.4, act.pos[1]); scene.add(starMark);
 
-  // 나무 (인스턴스 2개로 그리기)
-  const trees = [];
-  for (let i = 0; i < 26; i++) {
-    const a = i / 26 * Math.PI * 2 + (i % 2) * .1, r = 19 + (i * 37 % 7);
-    trees.push([Math.cos(a) * r, Math.sin(a) * r]);
-  }
-  trees.push([-5, -15], [5, -15], [-17, -1], [17, -1]);
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.25, .3, 1.2, 6), lam(0x8a5a35), trees.length);
-  const crown = new THREE.InstancedMesh(new THREE.ConeGeometry(1.3, 2.8, 7), lam(0x3f9d4f), trees.length);
-  const m4 = new THREE.Matrix4();
-  trees.forEach(([x, z], i) => {
-    trunk.setMatrixAt(i, m4.makeTranslation(x, .6, z));
-    crown.setMatrixAt(i, m4.makeTranslation(x, 2.4, z));
-    colliders.push({ x, z, r: .9 });
-  });
-  scene.add(trunk, crown);
+  scene.add(await Assets.createTrees(THREE, TREES));
+  TREES.forEach(([x, z]) => colliders.push({ x, z, r: .9 }));
 
-  // 임시 캐릭터 (단순 도형)
-  player = new THREE.Group();
-  const pBody = new THREE.Mesh(new THREE.CylinderGeometry(.45, .6, 1.2, 12), lam(0x3c8dff)); pBody.position.y = .6;
-  const pHead = new THREE.Mesh(new THREE.SphereGeometry(.45, 14, 10), lam(0xffd9b3)); pHead.position.y = 1.55;
-  const pNose = new THREE.Mesh(new THREE.ConeGeometry(.12, .3, 6), lam(0xff7a5a)); pNose.position.set(0, 1.55, .48); pNose.rotation.x = Math.PI / 2;
-  player.add(pBody, pHead, pNose);
-  player.userData.body = [pBody, pHead, pNose];
-  player.userData.body.forEach(m => m.userData.y0 = m.position.y);
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(.7, 16), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .2 }));
-  shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; player.add(shadow);
-  player.position.set(0, 0, 6);
-  player.rotation.y = Math.PI;
-  scene.add(player);
+  player = await Assets.createPlayer(THREE);
+  player.root.position.set(0, 0, 6);
+  player.root.rotation.y = Math.PI;
+  scene.add(player.root);
 
-  // 안내 NPC 자리 (단순 도형)
-  npc = new THREE.Group();
-  const nBody = new THREE.Mesh(new THREE.ConeGeometry(.75, 1.8, 10), lam(0x9b6bd6)); nBody.position.y = .9;
-  const nHead = new THREE.Mesh(new THREE.SphereGeometry(.45, 14, 10), lam(0xffe0c2)); nHead.position.y = 2.05;
-  npc.add(nBody, nHead);
-  const nTag = label('안내', { w: 2.2 }); nTag.position.y = 3.2; npc.add(nTag);
-  npc.position.set(-3, 0, 1.5); npc.lookAt(0, 0, 6);
-  scene.add(npc);
-  colliders.push({ x: npc.position.x, z: npc.position.z, r: .9 });
+  npc = await Assets.createNpc(THREE);
+  const nTag = Assets.createLabel(THREE, '안내', { w: 2.2 }); nTag.position.y = 3.2; npc.root.add(nTag);
+  npc.root.position.set(-3, 0, 1.5); npc.root.lookAt(0, 0, 6);
+  scene.add(npc.root);
+  colliders.push({ x: -3, z: 1.5, r: .9 });
 
-  // 터치 위치 표시
   marker = new THREE.Mesh(new THREE.RingGeometry(.35, .55, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }));
   marker.rotation.x = -Math.PI / 2; marker.position.y = .03; scene.add(marker);
 
@@ -257,8 +326,7 @@ function onResize() {
 }
 
 /* ---------- 조작: 터치한 곳으로 이동 ---------- */
-let target = null, goal = null, markerT = 0;
-let raycaster = null;
+let target = null, goal = null, markerT = 0, raycaster = null;
 function onTap(e) {
   if (paused) return;
   e.preventDefault();
@@ -271,7 +339,7 @@ function onTap(e) {
   const b = h.object.userData.building;
   if (b) {
     target = b.doorPt.clone(); goal = b;
-    if (!b.open) shake(b);
+    if (!b.open) shakes.push({ b, t: 0 });
   } else {
     const p = h.point.clone(); p.y = 0;
     if (p.length() > 24) p.setLength(24);
@@ -280,7 +348,6 @@ function onTap(e) {
   marker.position.set(target.x, .03, target.z); markerT = 1;
 }
 const shakes = [];
-function shake(b) { shakes.push({ b, t: 0 }); }
 
 /* ---------- 매 프레임 ---------- */
 let paused = false;
@@ -304,28 +371,26 @@ function frame(now) {
 }
 
 function update(dt, t) {
-  const p = player.position;
+  const p = player.root.position;
   let moving = false;
   if (target) {
     const d = new THREE.Vector3().subVectors(target, p); d.y = 0;
     const dist = d.length();
     if (dist < .08) { target = null; arrive(); }
     else {
-      const step = Math.min(dist, SPEED * dt);
       d.normalize();
-      p.addScaledVector(d, step);
+      p.addScaledVector(d, Math.min(dist, SPEED * dt));
       for (const c of colliders) {
         const dx = p.x - c.x, dz = p.z - c.z, r = c.r + .5, dd = Math.hypot(dx, dz);
         if (dd < r && dd > 1e-4) { p.x = c.x + dx / dd * r; p.z = c.z + dz / dd * r; }
       }
       const ang = Math.atan2(d.x, d.z);
-      player.rotation.y += wrap(ang - player.rotation.y) * Math.min(1, dt * 12);
+      player.root.rotation.y += wrap(ang - player.root.rotation.y) * Math.min(1, dt * 12);
       moving = true;
     }
   }
-  // 걷는 모양
-  const bob = moving ? Math.abs(Math.sin(t * 12)) * .15 : 0;
-  player.userData.body.forEach(m => m.position.y = m.userData.y0 + bob);
+  player.update(dt, t, moving);
+  npc.update(dt, t, false);
 
   // 활동놀이 건물에 다가가면 입장
   const act = buildings[0];
@@ -343,16 +408,12 @@ function update(dt, t) {
   updateCamera(dt);
 }
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-
-function arrive() {
-  if (goal && goal.open) enter(goal);
-  goal = null;
-}
+function arrive() { if (goal && goal.open) enter(goal); goal = null; }
 
 // 카메라는 캐릭터를 따라가되, 마을 중심 쪽으로 조금 당겨 건물 이름이 보이게 둡니다
 const camOff = [0, 23, 19], LOOK_AHEAD = 4;
 function updateCamera(dt) {
-  const p = player.position;
+  const p = player.root.position;
   const k = Math.min(1, dt * 4);
   const fx = p.x * .6, fz = p.z * .6 - LOOK_AHEAD;
   camera.position.x += (fx + camOff[0] - camera.position.x) * k;
@@ -362,20 +423,22 @@ function updateCamera(dt) {
 }
 
 /* ---------- 활동놀이 입장 / 돌아오기 ---------- */
-function enter(b) {
+async function enter(b) {
   b.armed = false; target = null; goal = null;
   paused = true;
-  show('s-select');
-  status();
+  $('#status').classList.remove('on');
+  const a = await activityP();
+  a.open(backToVillage);
 }
-$('#back').onclick = () => {
+function backToVillage() {
   const act = buildings[0];
   const back = act.doorPt.clone().add(act.doorPt.clone().setLength(-3.2));
-  player.position.copy(back); player.rotation.y = Math.atan2(-back.x, -back.z);
+  player.root.position.copy(back); player.root.rotation.y = Math.atan2(-back.x, -back.z);
   show('');
+  $('#status').classList.add('on');
   paused = false; loop.last = performance.now(); loop.t0 = 0; loop.n = 0;
   requestAnimationFrame(frame);
-};
+}
 
 /* ---------- 상태 표시 ---------- */
 const sec = (a, b = T0) => a ? ((a - b) / 1000).toFixed(1) + '초' : '-';
@@ -384,11 +447,11 @@ function status() {
   const info = renderer.info.render;
   const fc = loop.fps >= 30 ? 'ok' : loop.fps >= 24 ? 'warn' : 'bad';
   $('#status').innerHTML = `
-    <div><b>fps</b> <span class="${paused ? '' : fc}">${paused ? '멈춤(미션 화면)' : loop.fps}</span> · <b>최저</b> ${isFinite(loop.minFps) ? loop.minFps : '-'} · <b>그리기</b> ${loop.ms.toFixed(1)}ms</div>
+    <div><b>fps</b> <span class="${fc}">${loop.fps}</span> · <b>최저</b> ${isFinite(loop.minFps) ? loop.minFps : '-'} · <b>그리기</b> ${loop.ms.toFixed(1)}ms</div>
     <div><b>첫 화면→마을 조작</b> <span class="ok">${sec(T.ready)}</span> · START→ ${sec(T.ready, T.start)}</div>
     <div><b>3D 엔진</b> ${sec(T.three)} · <b>마을 생성</b> ${T.scene && T.start ? ((T.scene - Math.max(T.start, T.three)) / 1000).toFixed(2) + '초' : '-'}</div>
     <div><b>화면</b> ${innerWidth}×${innerHeight} ×${DPR} · <b>draw</b> ${info.calls} · <b>삼각형</b> ${info.triangles}</div>
-    <div><b>소리</b> ${audio ? audio.state : '없음'}</div>`;
+    <div><b>소리</b> ${audio ? audio.state : '없음'}${Assets.ASSET_ERRORS.length ? ` · <span class="bad">모델 오류 ${Assets.ASSET_ERRORS.length}</span>` : ''}</div>`;
 }
 </script>
 </body>
