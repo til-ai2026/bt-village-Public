@@ -12,8 +12,12 @@ const $ = s => document.querySelector(s);
 const show = id => document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-/* 몸 위치 칸 나누기 (어깨 중심 x, 거울 좌표) — 시작값 */
-const LANE = { left: .42, right: .58, hyst: .03 };
+/* 몸 위치 칸 나누기 (어깨 중심 x, 거울 좌표) — 시작값
+   가운데에서 옆 칸으로 가려면 화면 너비의 약 9%만 움직이면 됩니다 (전: 11%) */
+const LANE = { left: .44, right: .56, hyst: .03 };
+/* 사람 인식이 잠깐 끊겨도 이 시간 안에 보였으면 카메라로 정한 칸을 그대로 인정합니다 */
+const CAMERA_GRACE_MS = 1000;
+let lastReadyT = -1e9;
 
 const video = $('#mVideo'), cv = $('#mCanvas'), g = cv.getContext('2d');
 const bus = new EventTarget();
@@ -29,7 +33,8 @@ export function preload() {
   eng.addEventListener('signal', e => emit({ ...e.detail, source: 'camera' }));
   eng.addEventListener('frame', () => {
     const x = eng.ready ? eng.bodyX : null;
-    if (x == null) { lane = null; return; }
+    if (x == null) return;  // 잠깐 놓쳐도 마지막 칸은 유지합니다 (받을 때는 CAMERA_GRACE_MS 안에 보였는지 확인)
+    lastReadyT = performance.now();
     // 지금 칸에 머무르는 쪽으로 경계를 조금 밀어 칸이 떨리지 않게 함
     const c = lane ?? 1, h = LANE.hyst;
     const lb = LANE.left + (c === 0 ? h : -h), rb = LANE.right + (c === 2 ? -h : h);
@@ -39,7 +44,7 @@ export function preload() {
 }
 function emit(sig) { bus.dispatchEvent(new CustomEvent('signal', { detail: sig })); }
 bus.addEventListener('signal', e => { if (phase === 'action' && cur) cur.onSignal(e.detail); });
-const cameraReady = () => !!eng && eng.ready;
+const cameraReady = () => !!eng && eng.st.cam === 'on' && (eng.ready || performance.now() - lastReadyT < CAMERA_GRACE_MS);
 
 /* ---------- 입장 · 퇴장 ---------- */
 export async function open(exitCb) {
